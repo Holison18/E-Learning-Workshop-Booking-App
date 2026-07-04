@@ -265,7 +265,7 @@ export default function AdminDashboard() {
                         <Badge variant={w.status === 'published' ? 'success' : 'neutral'}>{w.status}</Badge>
                       </td>
                       <td>
-                        <Link href="/admin/workshops" className={styles.manageLink}>Manage</Link>
+                        <Link href={`/admin/workshops/${w.id}`} className={styles.manageLink}>Manage</Link>
                       </td>
                     </tr>
                   ))}
