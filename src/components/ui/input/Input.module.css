@@ -1,0 +1,30 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--secondary-gray);
+}
+
+.errorText {
+  font-size: 0.75rem;
+  color: var(--primary-red);
+  margin-top: 0.25rem;
+}
+
+.input {
+  /* Inherits from globals.css base input style */
+}
+
+.errorInput {
+  border-color: var(--primary-red);
+}
+
+.errorInput:focus {
+  box-shadow: 0 0 0 3px rgba(163, 32, 32, 0.2);
+}

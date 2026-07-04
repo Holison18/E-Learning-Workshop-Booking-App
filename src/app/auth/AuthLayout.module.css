@@ -1,0 +1,93 @@
+.container {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.formPane {
+  display: flex;
+  justify-content: center;
+  background-color: var(--background-white);
+  padding: 2.5rem 1.5rem;
+  overflow-y: auto;
+}
+
+.formPaneInner {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 5rem);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  color: var(--secondary-black);
+}
+
+.logoMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: var(--primary-red);
+  color: var(--background-white);
+  flex-shrink: 0;
+}
+
+.logoText {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: 1.125rem;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 2.5rem 0;
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.content > * {
+  width: 100%;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--secondary-gray);
+}
+
+.dot {
+  opacity: 0.6;
+}
+
+.imagePane {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(26, 26, 26, 0.05) 0%, rgba(26, 26, 26, 0.2) 100%),
+    url('/images/auth-hero.jpg');
+  background-size: cover;
+  background-position: center;
+}
+
+@media (max-width: 900px) {
+  .container {
+    grid-template-columns: 1fr;
+  }
+
+  .imagePane {
+    display: none;
+  }
+
+  .formPaneInner {
+    min-height: auto;
+  }
+}

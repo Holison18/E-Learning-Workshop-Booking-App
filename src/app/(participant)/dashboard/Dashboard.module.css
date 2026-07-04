@@ -1,0 +1,423 @@
+.hero {
+  background: linear-gradient(135deg, var(--primary-red) 0%, #7a1515 100%);
+  border-radius: 12px;
+  padding: 2.5rem;
+  color: var(--background-white);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroContent {
+  max-width: 600px;
+  position: relative;
+  z-index: 2;
+}
+
+.heroTitle {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #FFFFFF !important;
+}
+
+.heroSubtitle {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.heroText {
+  font-size: 1rem;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.heroActions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.buttonWhite {
+  background-color: var(--background-white);
+  color: var(--primary-red);
+  border: none;
+}
+
+.buttonWhite:hover {
+  background-color: var(--background-off-white);
+  transform: translateY(-1px);
+}
+
+.buttonDarkRed {
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--background-white);
+  border: none;
+}
+
+.buttonDarkRed:hover {
+  background-color: rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.heroGraphic {
+  position: relative;
+  z-index: 2;
+  margin-right: 2rem;
+}
+
+.graphicCircle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.graphicIcon {
+  color: var(--background-white);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  background-color: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.statHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.statIconWrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background-color: var(--primary-red-light);
+  color: var(--primary-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statTrend {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--success-green);
+}
+
+.statLabel {
+  font-size: 0.875rem;
+  color: var(--secondary-gray);
+  margin-bottom: 0.25rem;
+}
+
+.statValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--secondary-black);
+}
+
+.middleSection {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.cardPanel {
+  background-color: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.panelTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--secondary-black);
+}
+
+.panelSubtitle {
+  font-size: 0.875rem;
+  color: var(--secondary-gray);
+  margin-top: 0.25rem;
+}
+
+.panelAction {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-red);
+  text-decoration: none;
+}
+
+.toggleGroup {
+  display: flex;
+  background-color: #F3F4F6;
+  border-radius: 8px;
+  padding: 0.25rem;
+}
+
+.toggleButton {
+  padding: 0.375rem 1rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: var(--secondary-gray);
+  cursor: pointer;
+}
+
+.toggleButton.active {
+  background-color: var(--background-white);
+  color: var(--primary-red);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.chartArea {
+  height: 250px;
+  width: 100%;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 15px;
+  width: 2px;
+  background-color: var(--border-light);
+  z-index: 0;
+}
+
+.timelineItem {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.timelineIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--background-white);
+}
+
+.timelineContent {
+  display: flex;
+  flex-direction: column;
+}
+
+.timelineTitle {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--secondary-black);
+}
+
+.timelineDesc {
+  font-size: 0.75rem;
+  color: var(--secondary-gray);
+  margin-top: 0.25rem;
+}
+
+.timelineTime {
+  font-size: 0.75rem;
+  color: var(--secondary-gray);
+  margin-top: 0.25rem;
+}
+
+/* Workshops section */
+.workshopsSection {
+  margin-bottom: 2rem;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+}
+
+.workshopsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.workshopCard {
+  background-color: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.workshopImage {
+  height: 160px;
+  width: 100%;
+  object-fit: cover;
+  background-color: #F3F4F6;
+}
+
+.workshopContent {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.workshopCategory {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary-red);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.workshopTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--secondary-black);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.workshopMeta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.8125rem;
+  color: var(--secondary-gray);
+}
+
+.workshopMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.workshopFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  border-top: 1px solid var(--border-light);
+  padding-top: 1rem;
+}
+
+.attendees {
+  display: flex;
+  align-items: center;
+}
+
+.attendeeAvatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--background-white);
+  background-color: var(--secondary-gray);
+  margin-left: -8px;
+}
+
+.attendeeAvatar:first-child {
+  margin-left: 0;
+}
+
+.attendeesCount {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid var(--background-white);
+  background-color: #9CA3AF;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  margin-left: -8px;
+}
+
+.bookButton {
+  background: transparent;
+  color: var(--primary-red);
+  font-weight: 700;
+  font-size: 0.875rem;
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+  .middleSection {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    flex-direction: column;
+    text-align: center;
+  }
+  .heroGraphic {
+    display: none;
+  }
+  .heroActions {
+    justify-content: center;
+  }
+  .statsGrid {
+    grid-template-columns: 1fr;
+  }
+}

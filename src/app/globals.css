@@ -1,0 +1,93 @@
+:root {
+  /* KNUST Brand Colors */
+  --primary-red: #A32020;
+  --primary-red-hover: #8B1B1B;
+  --primary-red-light: #FBEBEB;
+  
+  --secondary-black: #1A1A1A;
+  --secondary-gray: #4A4A4A;
+  --background-white: #FFFFFF;
+  --background-off-white: #F8F9FA;
+  
+  /* Status Colors */
+  --success-green: #2E7D32;
+  --success-green-bg: #E8F5E9;
+  --warning-orange: #ED6C02;
+  --warning-orange-bg: #FFF3E0;
+  
+  /* Borders & Shadows */
+  --border-light: #E0E0E0;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 12px 24px rgba(163, 32, 32, 0.15); /* Red tinted shadow for premium feel */
+  
+  /* Typography */
+  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--background-off-white);
+  color: var(--secondary-black);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  color: var(--secondary-black);
+  margin-bottom: 0.5rem;
+  line-height: 1.2;
+}
+
+a {
+  color: var(--primary-red);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--primary-red-hover);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Base Form Elements */
+input, select, textarea {
+  font-family: var(--font-body);
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: var(--background-white);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--primary-red);
+  box-shadow: 0 0 0 3px rgba(163, 32, 32, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}

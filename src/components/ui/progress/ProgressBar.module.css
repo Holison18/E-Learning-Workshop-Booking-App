@@ -1,0 +1,31 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-width: 120px;
+}
+
+.track {
+  flex: 1;
+  height: 6px;
+  background-color: var(--border-light);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  background-color: var(--success-green);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.fillDanger {
+  background-color: var(--primary-red);
+}
+
+.label {
+  font-size: 0.8125rem;
+  color: var(--secondary-gray);
+  white-space: nowrap;
+}
