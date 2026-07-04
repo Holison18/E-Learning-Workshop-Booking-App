@@ -311,7 +311,11 @@ export default function AdminDashboard() {
                         </td>
                         <td className={styles.workshopMeta}>{formatTimeAgo(b.booked_at)}</td>
                         <td>
-                          <Link href="/admin/workshops" className={styles.manageLink}>Manage</Link>
+                          {b.workshops?.id ? (
+                            <Link href={`/admin/workshops/${b.workshops.id}`} className={styles.manageLink}>Manage</Link>
+                          ) : (
+                            <Link href="/admin/workshops" className={styles.manageLink}>Manage</Link>
+                          )}
                         </td>
                       </tr>
                     );

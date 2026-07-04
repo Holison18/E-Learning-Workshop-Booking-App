@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Armchair, Pencil, Trash2 } from 'lucide-react';
+import { Armchair, Pencil, Trash2, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
@@ -202,6 +202,9 @@ export default function AdminWorkshops() {
                     <td>{w.facilitator || '—'}</td>
                     <td>
                       <div className={styles.actionCell}>
+                        <Link href={`/admin/workshops/${w.id}`} className={styles.iconButton} aria-label="View workshop details">
+                          <Eye size={15} />
+                        </Link>
                         <Link href={`/admin/workshops/${w.id}/edit`} className={styles.iconButton} aria-label="Edit workshop">
                           <Pencil size={15} />
                         </Link>
