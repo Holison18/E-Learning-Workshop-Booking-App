@@ -6,10 +6,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 
-// Using a basic QR code generator library (or we can use an image placeholder for the demo)
-// For the demo, we will generate a link to google charts API for the QR code
+// Using QuickChart API for reliable QR code generation
 const generateQRUrl = (data: string) => {
-  return `https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=${encodeURIComponent(data)}&choe=UTF-8`;
+  return `https://quickchart.io/qr?text=${encodeURIComponent(data)}&size=200`;
 };
 
 type Booking = {

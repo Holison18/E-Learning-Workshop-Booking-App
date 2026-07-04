@@ -227,6 +227,8 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                     label="Workshop Date"
                     name="date"
                     type="date"
+                    min="2027-01-13"
+                    max="2027-01-17"
                     value={formData.date}
                     onChange={handleChange}
                     required

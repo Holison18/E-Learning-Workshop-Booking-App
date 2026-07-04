@@ -95,7 +95,9 @@ CREATE POLICY "Admins can insert broadcasts" ON public.broadcasts FOR INSERT WIT
 
 -- Function and trigger to update seats_booked in workshops table automatically
 CREATE OR REPLACE FUNCTION update_seats_booked()
-RETURNS TRIGGER AS $$
+RETURNS TRIGGER 
+SECURITY DEFINER
+AS $$
 BEGIN
     IF TG_OP = 'INSERT' THEN
         UPDATE public.workshops
@@ -245,3 +247,6 @@ CREATE POLICY "Admins can update workshop banners" ON storage.objects
 DROP POLICY IF EXISTS "Admins can delete workshop banners" ON storage.objects;
 CREATE POLICY "Admins can delete workshop banners" ON storage.objects
     FOR DELETE USING (bucket_id = 'workshop-banners' AND public.is_admin(auth.uid()));
+
+-- Add missing INSERT policy for participants
+CREATE POLICY "Participants can insert their own profile" ON public.participants FOR INSERT WITH CHECK (auth.uid() = id);

@@ -185,7 +185,9 @@ export default function AdminWorkshops() {
                 {paginated.map((w) => (
                   <tr key={w.id}>
                     <td>
-                      <div className={styles.workshopTitle}>{w.title}</div>
+                      <Link href={`/admin/workshops/${w.id}`} className={styles.workshopTitle} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        {w.title}
+                      </Link>
                       <div className={styles.workshopMeta}>
                         {new Date(w.date).toLocaleDateString()} · {w.start_time.slice(0, 5)}–{w.end_time.slice(0, 5)} · {w.location || 'TBA'}
                       </div>

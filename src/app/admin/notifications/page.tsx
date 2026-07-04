@@ -153,7 +153,7 @@ export default function AdminNotifications() {
           <span className={styles.statIcon} style={{ backgroundColor: 'var(--primary-red-light)', color: 'var(--primary-red)' }}><Headphones size={18} /></span>
           <div className={styles.statValue}>{participantCount.toLocaleString()}</div>
           <div className={styles.statLabel}>Support Reach</div>
-          <div className={styles.statCaption}>Registered students in the workshop portal</div>
+          <div className={styles.statCaption}>Registered participants in the workshop portal</div>
         </Card>
       </div>
 

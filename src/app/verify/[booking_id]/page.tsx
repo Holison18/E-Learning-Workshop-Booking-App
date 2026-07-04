@@ -1,30 +1,78 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card/Card';
-import { CheckCircle2, XCircle } from 'lucide-react';
-import styles from '@/components/layout/DashboardLayout.module.css'; // Reuse some basic layout
+import { Button } from '@/components/ui/button/Button';
+import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
-export default async function VerifyBookingPage({ params }: { params: { booking_id: string } }) {
-  // Server Component: fetch data directly
-  const { data: booking, error } = await supabase
-    .from('bookings')
-    .select(`
-      checked_in,
-      participants (
-        first_name,
-        last_name,
-        organization_name
-      ),
-      workshops (
-        title,
-        date,
-        start_time,
-        end_time,
-        location
-      )
-    `)
-    .eq('id', params.booking_id)
-    .single();
+export default function VerifyBookingPage() {
+  const params = useParams();
+  const bookingId = params.booking_id as string;
+  
+  const [booking, setBooking] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  useEffect(() => {
+    async function fetchBooking() {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select(`
+          id,
+          checked_in,
+          participants (
+            first_name,
+            last_name,
+            organization_name
+          ),
+          workshops (
+            title,
+            date,
+            start_time,
+            end_time,
+            location
+          )
+        `)
+        .eq('id', bookingId)
+        .single();
+
+      if (error || !data) {
+        setError(true);
+      } else {
+        setBooking(data);
+      }
+      setLoading(false);
+    }
+    
+    if (bookingId) fetchBooking();
+  }, [bookingId]);
+
+  const handleCheckIn = async () => {
+    setUpdating(true);
+    const { error } = await supabase
+      .from('bookings')
+      .update({ checked_in: true })
+      .eq('id', bookingId);
+
+    if (error) {
+      alert("Failed to check in: " + error.message);
+      setUpdating(false);
+    } else {
+      setBooking((prev: any) => ({ ...prev, checked_in: true }));
+      setUpdating(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--background-off-white)' }}>
+        <Loader2 className="animate-spin" size={32} color="var(--primary-red)" />
+      </div>
+    );
+  }
 
   if (error || !booking) {
     return (
@@ -40,8 +88,6 @@ export default async function VerifyBookingPage({ params }: { params: { booking_
     );
   }
 
-  // Determine if workshop is happening today (basic check for demo)
-  // @ts-ignore
   const isToday = new Date(booking.workshops.date).toDateString() === new Date().toDateString();
 
   return (
@@ -69,29 +115,35 @@ export default async function VerifyBookingPage({ params }: { params: { booking_
           <div style={{ marginBottom: '1.5rem' }}>
             <p style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Participant</p>
             <h2 style={{ margin: 0, fontSize: '1.25rem' }}>
-              {/* @ts-ignore */}
-              {booking.participants.first_name} {booking.participants.last_name}
+              {booking.participants?.first_name} {booking.participants?.last_name}
             </h2>
-            {/* @ts-ignore */}
-            {booking.participants.organization_name && (
-              /* @ts-ignore */
+            {booking.participants?.organization_name && (
               <p style={{ color: 'var(--secondary-gray)', margin: '0.25rem 0 0 0' }}>{booking.participants.organization_name}</p>
             )}
           </div>
 
           <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1.5rem' }}>
             <p style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workshop Details</p>
-            {/* @ts-ignore */}
-            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem' }}>{booking.workshops.title}</h3>
+            <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem' }}>{booking.workshops?.title}</h3>
             <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              {/* @ts-ignore */}
-              <span>📅 {new Date(booking.workshops.date).toLocaleDateString()} {isToday && <strong style={{ color: 'var(--success-green)' }}>(Today)</strong>}</span>
-              {/* @ts-ignore */}
-              <span>⏰ {booking.workshops.start_time.slice(0, 5)} - {booking.workshops.end_time.slice(0, 5)}</span>
-              {/* @ts-ignore */}
-              <span>📍 {booking.workshops.location}</span>
+              <span>📅 {new Date(booking.workshops?.date).toLocaleDateString()} {isToday && <strong style={{ color: 'var(--success-green)' }}>(Today)</strong>}</span>
+              <span>⏰ {booking.workshops?.start_time.slice(0, 5)} - {booking.workshops?.end_time.slice(0, 5)}</span>
+              <span>📍 {booking.workshops?.location}</span>
             </div>
           </div>
+          
+          {!booking.checked_in && (
+            <div style={{ marginTop: '2rem' }}>
+              <Button 
+                onClick={handleCheckIn} 
+                disabled={updating}
+                fullWidth
+                style={{ height: '3rem', fontSize: '1.125rem' }}
+              >
+                {updating ? 'Confirming...' : 'Confirm Check-In'}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

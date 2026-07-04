@@ -43,7 +43,6 @@ export default function DashboardLayout({ children, admin = false }: { children:
 
   const participantLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-    { href: '/workshops', label: 'Workshops', icon: <GraduationCap size={18} /> },
     { href: '/bookings', label: 'My Bookings', icon: <CalendarDays size={18} /> },
     { href: '/schedule', label: 'Schedule', icon: <Calendar size={18} /> },
   ];
