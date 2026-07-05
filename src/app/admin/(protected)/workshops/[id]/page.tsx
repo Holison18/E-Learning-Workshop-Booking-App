@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
 import { ArrowLeft, Mail, Users, CheckCircle } from 'lucide-react';
+import { formatTime } from '@/lib/formatTime';
 import { ReminderModal } from '@/components/admin/ReminderModal';
 import Link from 'next/link';
 import { requestApi } from '@/lib/api';
@@ -96,7 +97,7 @@ export default function WorkshopDetailsPage() {
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: '0 0 0.25rem 0' }}>{workshop.title}</h1>
           <p style={{ color: 'var(--secondary-gray)', margin: 0 }}>
-            {new Date(workshop.date).toLocaleDateString()} | {workshop.start_time.slice(0, 5)}
+            {new Date(workshop.date).toLocaleDateString()} | {formatTime(workshop.start_time)}
           </p>
         </div>
         <Button onClick={() => setShowReminder(true)} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

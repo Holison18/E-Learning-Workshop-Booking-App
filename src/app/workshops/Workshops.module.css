@@ -1,0 +1,259 @@
+.workshopsSection {
+  margin-bottom: 2rem;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.panelTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--secondary-black);
+}
+
+.panelSubtitle {
+  font-size: 0.875rem;
+  color: var(--secondary-gray);
+  margin-top: 0.25rem;
+}
+
+.panelAction {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--primary-red);
+  text-decoration: none;
+}
+
+.cardPanel {
+  background-color: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.filterField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.filterLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--secondary-gray);
+}
+
+.filterInput,
+.filterSelect {
+  width: 100%;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 0.5rem 0.625rem;
+  background-color: var(--background-white);
+  color: var(--secondary-black);
+  font: inherit;
+  font-size: 0.8125rem;
+}
+
+.filterInput::placeholder {
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filterMeta {
+  font-size: 0.875rem;
+  color: var(--secondary-gray);
+}
+
+.filterReset {
+  background: transparent;
+  color: var(--primary-red);
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.timeSlotGroup {
+  margin-bottom: 2.5rem;
+}
+
+.timeSlotHeader {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--secondary-black);
+  margin-bottom: 1rem;
+  padding-left: 0.5rem;
+  border-left: 4px solid var(--primary-red);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dayCount {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  height: 1.75rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--primary-red-light);
+  color: var(--primary-red);
+  font-size: 0.75rem;
+}
+
+.timeSlotGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.workshopCard {
+  background-color: var(--background-white);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 320px;
+  max-width: 380px;
+}
+
+.workshopImage {
+  height: 220px;
+  width: 100%;
+  object-fit: cover;
+  display: block;
+  background-color: #F3F4F6;
+}
+
+.workshopContent {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.workshopCategory {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary-red);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.workshopTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--secondary-black);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.workshopMeta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.8125rem;
+  color: var(--secondary-gray);
+}
+
+.workshopMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.workshopFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  border-top: 1px solid var(--border-light);
+  padding-top: 1rem;
+}
+
+.statusApproved {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  background: #059669;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.statusPending {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 999px;
+  background: #D97706;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.detailsBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  text-decoration: none;
+  background: var(--primary-red);
+  color: #fff;
+  border: none;
+  transition: opacity 0.2s;
+  margin-top: 0.75rem;
+}
+
+.detailsBtn:hover {
+  opacity: 0.9;
+}
+
+.buttonAttend {
+  background-color: var(--primary-red);
+  color: white !important;
+  border: none !important;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: opacity 0.2s;
+}
+
+.buttonCancel {
+  background: transparent;
+  color: var(--primary-red);
+  border: 1px solid var(--primary-red);
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .filterGrid {
+    grid-template-columns: 1fr;
+  }
+}

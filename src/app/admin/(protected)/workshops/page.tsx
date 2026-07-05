@@ -7,13 +7,17 @@ import { requestApi } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
+import { formatTime } from '@/lib/formatTime';
 import { ProgressBar } from '@/components/ui/progress/ProgressBar';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog/ConfirmDialog';
+import { Toast } from '@/components/ui/toast/Toast';
 import styles from './AdminWorkshops.module.css';
 
 type Workshop = {
   id: string;
   title: string;
   facilitator: string | null;
+  facilitator_image_url?: string;
   location: string | null;
   category: string | null;
   status: string;
@@ -22,6 +26,8 @@ type Workshop = {
   end_time: string;
   capacity: number;
   seats_booked: number;
+  description?: string;
+  image_url?: string;
 };
 
 const PAGE_SIZE = 6;
@@ -29,10 +35,15 @@ const PAGE_SIZE = 6;
 export default function AdminWorkshops() {
   const [workshops, setWorkshops] = useState<Workshop[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<Workshop | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   async function fetchWorkshops() {
     const response = await requestApi<{ data: Workshop[] }>('/api/admin/workshop');
@@ -46,21 +57,26 @@ export default function AdminWorkshops() {
     })();
   }, []);
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this workshop? This will also delete all associated bookings.')) return;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
 
     const res = await fetch('/api/admin/workshop', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ id: deleteTarget.id }),
     });
 
     if (res.ok) {
-      setWorkshops(workshops.filter((w) => w.id !== id));
+      setWorkshops(workshops.filter((w) => w.id !== deleteTarget.id));
+      setToast({ type: 'success', message: `"${deleteTarget.title}" deleted successfully.` });
     } else {
       const data = await res.json();
-      alert('Error deleting workshop: ' + (data.error || 'Unknown error'));
+      setToast({ type: 'error', message: data.error || 'Failed to delete workshop.' });
     }
+
+    setDeleting(false);
+    setDeleteTarget(null);
   };
 
   const categories = useMemo(
@@ -70,12 +86,22 @@ export default function AdminWorkshops() {
 
   const filtered = useMemo(() => {
     return workshops.filter((w) => {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        if (
+          !w.title.toLowerCase().includes(q) &&
+          !(w.facilitator || '').toLowerCase().includes(q) &&
+          !(w.location || '').toLowerCase().includes(q) &&
+          !(w.category || '').toLowerCase().includes(q)
+        ) return false;
+      }
+      if (statusFilter !== 'all' && w.status !== statusFilter) return false;
       if (categoryFilter !== 'all' && w.category !== categoryFilter) return false;
       if (dateFrom && w.date < dateFrom) return false;
       if (dateTo && w.date > dateTo) return false;
       return true;
     });
-  }, [workshops, categoryFilter, dateFrom, dateTo]);
+  }, [workshops, searchQuery, statusFilter, categoryFilter, dateFrom, dateTo]);
 
   const totalSeats = filtered.reduce((sum, w) => sum + w.capacity, 0);
   const bookedSeats = filtered.reduce((sum, w) => sum + w.seats_booked, 0);
@@ -87,7 +113,7 @@ export default function AdminWorkshops() {
   if (loading) return <div className={styles.emptyState}>Loading workshops...</div>;
 
   return (
-    <div className={styles.page}>
+    <><div className={styles.page}>
       <div className={styles.pageHeader}>
         <div>
           <h1>Workshop Management</h1>
@@ -103,6 +129,27 @@ export default function AdminWorkshops() {
       <Card>
         <CardContent>
           <div className={styles.filtersRow}>
+            <div className={styles.searchField}>
+              <input
+                type="text"
+                className={styles.searchInput}
+                placeholder="Search workshops..."
+                value={searchQuery}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
+              />
+            </div>
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel}>Status</label>
+              <select
+                className={styles.filterSelect}
+                value={statusFilter}
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+              >
+                <option value="all">All Statuses</option>
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </div>
             <div className={styles.filterField}>
               <label className={styles.filterLabel}>Category</label>
               <select
@@ -117,28 +164,28 @@ export default function AdminWorkshops() {
               </select>
             </div>
             <div className={styles.filterField}>
-              <label className={styles.filterLabel}>Date Range</label>
-              <div className={styles.dateRangeGroup}>
-                <input
-                  type="date"
-                  className={styles.dateInput}
-                  value={dateFrom}
-                  onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
-                />
-                <span>to</span>
-                <input
-                  type="date"
-                  className={styles.dateInput}
-                  value={dateTo}
-                  onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
-                />
-              </div>
+              <label className={styles.filterLabel}>From</label>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={dateFrom}
+                onChange={(e) => { setDateFrom(e.target.value); setPage(1); }}
+              />
             </div>
-            {(categoryFilter !== 'all' || dateFrom || dateTo) && (
+            <div className={styles.filterField}>
+              <label className={styles.filterLabel}>To</label>
+              <input
+                type="date"
+                className={styles.dateInput}
+                value={dateTo}
+                onChange={(e) => { setDateTo(e.target.value); setPage(1); }}
+              />
+            </div>
+            {(searchQuery || statusFilter !== 'all' || categoryFilter !== 'all' || dateFrom || dateTo) && (
               <Button
                 type="button"
                 variant="ghost"
-                onClick={() => { setCategoryFilter('all'); setDateFrom(''); setDateTo(''); setPage(1); }}
+                onClick={() => { setSearchQuery(''); setStatusFilter('all'); setCategoryFilter('all'); setDateFrom(''); setDateTo(''); setPage(1); }}
               >
                 Clear filters
               </Button>
@@ -189,7 +236,7 @@ export default function AdminWorkshops() {
                         {w.title}
                       </Link>
                       <div className={styles.workshopMeta}>
-                        {new Date(w.date).toLocaleDateString()} · {w.start_time.slice(0, 5)}–{w.end_time.slice(0, 5)} · {w.location || 'TBA'}
+                        {new Date(w.date).toLocaleDateString()} · {formatTime(w.start_time)}–{formatTime(w.end_time)} · {w.location || 'TBA'}
                       </div>
                     </td>
                     <td>
@@ -199,10 +246,15 @@ export default function AdminWorkshops() {
                       {w.category ? <Badge variant="info">{w.category}</Badge> : <span className={styles.workshopMeta}>—</span>}
                     </td>
                     <td><ProgressBar value={w.seats_booked} max={w.capacity} /></td>
-                    <td>{w.facilitator || '—'}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      {w.facilitator_image_url ? (
+                        <img src={w.facilitator_image_url} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle', marginRight: '0.375rem' }} />
+                      ) : null}
+                      {w.facilitator || '—'}
+                    </td>
                     <td>
                       <div className={styles.actionCell}>
-                        <Link href={`/admin/workshops/${w.id}`} className={styles.iconButton} aria-label="View workshop details">
+                        <Link href={`/admin/workshops/${w.id}/preview`} className={styles.iconButton} aria-label="Preview workshop">
                           <Eye size={15} />
                         </Link>
                         <Link href={`/admin/workshops/${w.id}/edit`} className={styles.iconButton} aria-label="Edit workshop">
@@ -210,7 +262,7 @@ export default function AdminWorkshops() {
                         </Link>
                         <button
                           className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                          onClick={() => handleDelete(w.id)}
+                          onClick={() => setDeleteTarget(w)}
                           aria-label="Delete workshop"
                         >
                           <Trash2 size={15} />
@@ -255,5 +307,23 @@ export default function AdminWorkshops() {
         </CardContent>
       </Card>
     </div>
-  );
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete Workshop"
+        message={deleteTarget ? `Are you sure you want to delete "${deleteTarget.title}"? This will also delete all associated bookings and cannot be undone.` : ''}
+        confirmLabel="Delete"
+        variant="danger"
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => { setDeleteTarget(null); setDeleting(false); }}
+      />
+
+      <Toast
+        open={toast !== null}
+        type={toast?.type || 'success'}
+        message={toast?.message || ''}
+        onClose={() => setToast(null)}
+      />
+  </>);
 }

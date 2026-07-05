@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.workshops (
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     facilitator TEXT,
+    facilitator_image_url TEXT,
     location TEXT,
     date DATE NOT NULL,
     start_time TIME NOT NULL,

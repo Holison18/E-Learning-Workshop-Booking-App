@@ -6,6 +6,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card/C
 import { Button } from '@/components/ui/button/Button';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { formatTime } from '@/lib/formatTime';
 
 export default function VerifyBookingPage() {
   const params = useParams();
@@ -127,7 +128,7 @@ export default function VerifyBookingPage() {
             <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem' }}>{booking.workshops?.title}</h3>
             <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               <span>📅 {new Date(booking.workshops?.date).toLocaleDateString()} {isToday && <strong style={{ color: 'var(--success-green)' }}>(Today)</strong>}</span>
-              <span>⏰ {booking.workshops?.start_time.slice(0, 5)} - {booking.workshops?.end_time.slice(0, 5)}</span>
+              <span>⏰ {booking.workshops?.start_time ? formatTime(booking.workshops.start_time) : ''} - {booking.workshops?.end_time ? formatTime(booking.workshops.end_time) : ''}</span>
               <span>📍 {booking.workshops?.location}</span>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getSessionToken, requestApi } from '@/lib/api';
 import styles from './Dashboard.module.css';
 import { ArrowRight, BookOpen, Calendar as CalendarIcon, Clock } from 'lucide-react';
+import { formatTime } from '@/lib/formatTime';
 
 type Workshop = {
   id: string;
@@ -17,6 +18,7 @@ type Workshop = {
   capacity: number;
   seats_booked: number;
   facilitator: string;
+  facilitator_image_url?: string;
   location: string;
   image_url?: string;
   category?: string | null;
@@ -169,9 +171,14 @@ export default function ParticipantDashboard() {
                 <div className={styles.timelineContent}>
                   <div className={styles.timelineTitle}>{nextWorkshop.title}</div>
                   <div className={styles.timelineDesc}>
-                    {new Date(nextWorkshop.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · {nextWorkshop.start_time.slice(0, 5)} · {nextWorkshop.location}
+                    {new Date(nextWorkshop.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · {formatTime(nextWorkshop.start_time)} · {nextWorkshop.location}
                   </div>
-                  <div className={styles.timelineTime}>Facilitator: {nextWorkshop.facilitator}</div>
+                  <div className={styles.timelineTime}>
+                    {nextWorkshop.facilitator_image_url && (
+                      <img src={nextWorkshop.facilitator_image_url} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle', marginRight: '0.375rem' }} />
+                    )}
+                    Facilitator: {nextWorkshop.facilitator}
+                  </div>
                 </div>
               </div>
             </div>

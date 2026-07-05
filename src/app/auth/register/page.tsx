@@ -27,8 +27,17 @@ export default function RegisterPage() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    const trimmedFirst = formData.firstName.trim();
+    const trimmedLast = formData.lastName.trim();
+
+    if (!trimmedFirst || !trimmedLast) {
+      setError('First and last name are required and cannot be just spaces.');
+      return;
+    }
+
+    setLoading(true);
 
     // 1. Sign up the user
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -47,8 +56,8 @@ export default function RegisterPage() {
       const { error: profileError } = await supabase.from('participants').insert([
         {
           id: authData.user.id,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+          first_name: trimmedFirst,
+          last_name: trimmedLast,
           email: formData.email,
           phone: formData.phone,
           organization_name: formData.organization || null,

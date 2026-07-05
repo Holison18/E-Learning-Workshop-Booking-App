@@ -5,6 +5,7 @@ type ApiRequestOptions = {
   body?: unknown;
   token?: string | null;
   headers?: HeadersInit;
+  silent?: boolean;
 };
 
 export async function getSessionToken(explicitToken?: string | null) {
@@ -15,28 +16,28 @@ export async function getSessionToken(explicitToken?: string | null) {
 }
 
 export async function requestApi<T>(path: string, options: ApiRequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, token, headers } = options;
-  const requestHeaders = new Headers(headers);
+  try {
+    const { method = 'GET', body, token, headers } = options;
+    const requestHeaders = new Headers(headers);
 
-  if (token) {
-    requestHeaders.set('Authorization', `Bearer ${token}`);
+    if (token) {
+      requestHeaders.set('Authorization', `Bearer ${token}`);
+    }
+
+    if (body !== undefined && !requestHeaders.has('Content-Type')) {
+      requestHeaders.set('Content-Type', 'application/json');
+    }
+
+    const response = await fetch(path, {
+      method,
+      headers: requestHeaders,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+
+    return payload as T;
+  } catch {
+    return {} as T;
   }
-
-  if (body !== undefined && !requestHeaders.has('Content-Type')) {
-    requestHeaders.set('Content-Type', 'application/json');
-  }
-
-  const response = await fetch(path, {
-    method,
-    headers: requestHeaders,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
-
-  const payload = await response.json().catch(() => ({}));
-
-  if (!response.ok) {
-    throw new Error(payload?.error || 'Request failed');
-  }
-
-  return payload as T;
 }

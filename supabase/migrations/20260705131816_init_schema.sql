@@ -99,6 +99,17 @@ CREATE POLICY "Anyone can view workshop banners" ON storage.objects
     FOR SELECT USING (bucket_id = 'workshop-banners');
 
 
+-- =====================================================================
+-- Storage: facilitator images
+-- =====================================================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('facilitator-images', 'facilitator-images', true)
+ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Anyone can view facilitator images" ON storage.objects;
+CREATE POLICY "Anyone can view facilitator images" ON storage.objects
+    FOR SELECT USING (bucket_id = 'facilitator-images');
 
 -- =====================================================================
 -- Trigger: keep workshops.seats_booked in sync with bookings

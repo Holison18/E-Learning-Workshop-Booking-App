@@ -37,8 +37,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   async function checkAdminStatus(userId: string) {
     try {
-      const response = await requestApi<{ data: { id: string }[] }>('/api/admin/admin');
-      const admin = response.data.find((admin) => admin.id === userId);
+      const response = await requestApi<{ data?: { id: string }[] }>('/api/admin/admin');
+      const admin = response?.data?.find((admin) => admin.id === userId);
       setIsAdmin(!!admin);
       if (admin) {
         setAdminInfo({ id: admin.id, email: '', role: '' });

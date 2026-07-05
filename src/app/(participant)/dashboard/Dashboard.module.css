@@ -440,7 +440,7 @@
 
 .filterGrid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 1rem;
 }
 
@@ -541,13 +541,6 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-.workshopImage {
-  height: 160px;
-  width: 100%;
-  object-fit: cover;
-  background-color: #F3F4F6;
 }
 
 .workshopContent {

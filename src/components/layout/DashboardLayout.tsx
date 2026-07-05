@@ -92,7 +92,7 @@ export default function DashboardLayout({ children, admin = false }: { children:
             <Link 
               key={link.href} 
               href={link.href}
-              className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
+              className={`${styles.navLink} ${(pathname === link.href || pathname.startsWith(link.href + '/')) ? styles.active : ''}`}
             >
               {link.icon}
               {link.label}

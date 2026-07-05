@@ -4,12 +4,28 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { getSessionToken, requestApi } from '@/lib/api';
 import styles from '../dashboard/Dashboard.module.css';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import schedStyles from './Schedule.module.css';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, MapPin, Clock } from 'lucide-react';
+import { formatTime } from '@/lib/formatTime';
+
+type WorkshopInfo = {
+  title: string;
+  date: string;
+  start_time: string;
+  location: string;
+};
+
+type BookingWithWorkshop = {
+  id: string;
+  approved: boolean;
+  checked_in: boolean;
+  workshops: WorkshopInfo;
+};
 
 export default function SchedulePage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [bookedDates, setBookedDates] = useState<Set<string>>(new Set());
+  const [bookingsByDate, setBookingsByDate] = useState<Map<string, BookingWithWorkshop[]>>(new Map());
   const [calendarMonth, setCalendarMonth] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
@@ -74,10 +90,19 @@ export default function SchedulePage() {
           return;
         }
 
-        const bookingsResponse = await requestApi<{ data: Array<{ workshops?: { date: string } | null }> }>('/api/book', { token });
+        const bookingsResponse = await requestApi<{ data: BookingWithWorkshop[] }>('/api/book', { token });
         const myBookings = bookingsResponse.data || [];
 
-        setBookedDates(new Set(myBookings.map((booking) => booking.workshops?.date).filter((date): date is string => Boolean(date))));
+        const byDate = new Map<string, BookingWithWorkshop[]>();
+        myBookings.forEach((booking) => {
+          const date = booking.workshops?.date;
+          if (!date) return;
+          const existing = byDate.get(date) || [];
+          existing.push(booking);
+          byDate.set(date, existing);
+        });
+
+        setBookingsByDate(byDate);
       } catch (error) {
         console.error('Failed to load schedule:', error);
       } finally {
@@ -87,6 +112,8 @@ export default function SchedulePage() {
 
     fetchData();
   }, [user]);
+
+  const bookedDates = useMemo(() => new Set(bookingsByDate.keys()), [bookingsByDate]);
 
   if (loading) {
     return <div style={{ display: 'flex', justifyContent: 'center', padding: '3rem' }}>Loading schedule...</div>;
@@ -149,12 +176,14 @@ export default function SchedulePage() {
             const dateKey = cell.date ? cell.key : '';
             const isToday = dateKey === todayKey;
             const hasBooking = Boolean(dateKey && bookedDates.has(dateKey));
+            const dayBookings = dateKey ? bookingsByDate.get(dateKey) : undefined;
 
             return (
               <div
                 key={cell.key}
                 className={[
                   styles.calendarDay,
+                  schedStyles.cell,
                   !cell.inMonth ? styles.calendarDayMuted : '',
                   hasBooking ? styles.calendarDayBooked : '',
                   isToday ? styles.calendarDayToday : '',
@@ -164,6 +193,23 @@ export default function SchedulePage() {
                 {cell.inMonth && hasBooking && <span className={styles.calendarDot} />}
                 {cell.inMonth && isToday && <span className={styles.calendarBadge}>Today</span>}
                 {cell.inMonth && hasBooking && <span className={styles.calendarHint}>Booked</span>}
+
+                {cell.inMonth && hasBooking && dayBookings && (
+                  <div className={schedStyles.tooltip}>
+                    {dayBookings.map((b) => (
+                      <div key={b.id} className={schedStyles.tooltipItem}>
+                        <div className={schedStyles.tooltipTitle}>{b.workshops.title}</div>
+                        <div className={schedStyles.tooltipInfo}>
+                          <span><Clock size={12} /> {formatTime(b.workshops.start_time)} - {formatTime(b.workshops.end_time)}</span>
+                          <span><MapPin size={12} /> {b.workshops.location}</span>
+                        </div>
+                        <div className={schedStyles.tooltipStatus}>
+                          {b.approved ? 'Approved' : 'Pending'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             );
           })}

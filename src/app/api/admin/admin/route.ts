@@ -33,22 +33,23 @@ export async function POST(req: Request) {
 
   const body = await req.json();
 
-  const {
-    first_name,
-    last_name,
-    email
-  } = body;
+  const trimmedFirst = body.first_name?.trim();
+  const trimmedLast = body.last_name?.trim();
+
+  if (!trimmedFirst || !trimmedLast) {
+    return Response.json({ error: "First and last name are required and cannot be just spaces." }, { status: 400 });
+  }
 
   const { data, error } = await supabaseAdmin
     .from("admins")
     .insert([
       {
-        first_name,
-        last_name,
-        email
+        first_name: trimmedFirst,
+        last_name: trimmedLast,
+        email: body.email,
       },
     ])
-    .select(); // returns inserted row
+    .select();
 
   if (error) {
     console.error("Error creating admin:", error);
@@ -71,21 +72,21 @@ export async function PUT(req: Request) {
 
   const body = await req.json();
 
-  const {
-    id,
-    first_name,
-    last_name,
-    email
-  } = body;
+  const trimmedFirst = body.first_name?.trim();
+  const trimmedLast = body.last_name?.trim();
+
+  if (!trimmedFirst || !trimmedLast) {
+    return Response.json({ error: "First and last name are required and cannot be just spaces." }, { status: 400 });
+  }
 
   const { data, error } = await supabaseAdmin
     .from("admins")
     .update({
-      first_name,
-      last_name,
-      email
+      first_name: trimmedFirst,
+      last_name: trimmedLast,
+      email: body.email,
     })
-    .eq("id", id)
+    .eq("id", body.id)
     .select();
 
   if (error) {

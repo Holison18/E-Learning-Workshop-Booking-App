@@ -49,7 +49,8 @@ export async function POST(req: Request) {
     capacity,
     category,
     status,
-    image_url
+    image_url,
+    facilitator_image_url,
   } = body;
 
   const { data, error } = await supabaseAdmin
@@ -66,7 +67,8 @@ export async function POST(req: Request) {
         capacity,
         category,
         status,
-        image_url
+        image_url,
+        facilitator_image_url,
       },
     ])
     .select(); // returns inserted row
@@ -105,6 +107,7 @@ export async function PUT(req: Request) {
     category,
     status,
     image_url,
+    facilitator_image_url,
   } = body;
 
   if (!id) {
@@ -123,6 +126,7 @@ export async function PUT(req: Request) {
   if (category !== undefined) updateFields.category = category;
   if (status !== undefined) updateFields.status = status;
   if (image_url !== undefined) updateFields.image_url = image_url;
+  if (facilitator_image_url !== undefined) updateFields.facilitator_image_url = facilitator_image_url;
 
   const { data, error } = await supabaseAdmin
     .from("workshops")

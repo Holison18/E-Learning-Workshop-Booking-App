@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Calendar, BookOpen, Search, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Badge } from '@/components/ui/badge/Badge';
+import { Button } from '@/components/ui/button/Button';
 import styles from './AdminBookings.module.css';
 
 type Booking = {
@@ -23,6 +24,8 @@ export default function AdminBookings() {
   const [searchQuery, setSearchQuery] = useState('');
   const [checkinFilter, setCheckinFilter] = useState<'all' | 'checked_in' | 'pending'>('all');
   const [approveFilter, setApproveFilter] = useState<'all' | 'approved' | 'pending'>('all');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
 
   async function fetchBookings() {
     const res = await fetch('/api/admin/bookings');
@@ -71,7 +74,10 @@ export default function AdminBookings() {
       approveFilter === 'all' ? true :
       approveFilter === 'approved' ? b.approved :
       !b.approved;
-    return matchesSearch && matchesCheckin && matchesApprove;
+    const bookingDate = b.booked_at?.split('T')[0] || '';
+    const matchesDateFrom = !dateFrom || bookingDate >= dateFrom;
+    const matchesDateTo = !dateTo || bookingDate <= dateTo;
+    return matchesSearch && matchesCheckin && matchesApprove && matchesDateFrom && matchesDateTo;
   });
 
   if (loading) return <div className={styles.emptyState}>Loading bookings...</div>;
@@ -99,30 +105,57 @@ export default function AdminBookings() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        <div className={styles.statusFilters}>
-          <span className={styles.filterLabel}>Check In:</span>
-          {(['all', 'pending', 'checked_in'] as const).map((s) => (
-            <button
-              key={s}
-              className={`${styles.statusBtn} ${checkinFilter === s ? styles.statusBtnActive : ''}`}
-              onClick={() => setCheckinFilter(s)}
-            >
-              {s === 'all' ? 'All' : s === 'checked_in' ? 'Checked In' : 'Pending'}
-            </button>
-          ))}
+        <div className={styles.filterField}>
+          <label className={styles.filterLabel}>Check In</label>
+          <select
+            className={styles.filterSelect}
+            value={checkinFilter}
+            onChange={(e) => setCheckinFilter(e.target.value as typeof checkinFilter)}
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="checked_in">Checked In</option>
+          </select>
         </div>
-        <div className={styles.statusFilters}>
-          <span className={styles.filterLabel}>Approved:</span>
-          {(['all', 'pending', 'approved'] as const).map((s) => (
-            <button
-              key={s}
-              className={`${styles.statusBtn} ${approveFilter === s ? styles.statusBtnActive : ''}`}
-              onClick={() => setApproveFilter(s)}
-            >
-              {s === 'all' ? 'All' : s === 'approved' ? 'Approved' : 'Pending'}
-            </button>
-          ))}
+        <div className={styles.filterField}>
+          <label className={styles.filterLabel}>Approved</label>
+          <select
+            className={styles.filterSelect}
+            value={approveFilter}
+            onChange={(e) => setApproveFilter(e.target.value as typeof approveFilter)}
+          >
+            <option value="all">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+          </select>
         </div>
+        <div className={styles.filterField}>
+          <label className={styles.filterLabel}>From</label>
+          <input
+            type="date"
+            className={styles.dateInput}
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+          />
+        </div>
+        <div className={styles.filterField}>
+          <label className={styles.filterLabel}>To</label>
+          <input
+            type="date"
+            className={styles.dateInput}
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+          />
+        </div>
+        {(checkinFilter !== 'all' || approveFilter !== 'all' || dateFrom || dateTo) && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => { setCheckinFilter('all'); setApproveFilter('all'); setDateFrom(''); setDateTo(''); }}
+          >
+            Clear filters
+          </Button>
+        )}
       </div>
 
       <Card>

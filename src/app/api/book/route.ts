@@ -88,7 +88,7 @@ export async function POST(req: Request) {
     (b: any) => b.workshop_id === workshopId
   );
   if (alreadyBooked) {
-    return Response.json({ data: alreadyBooked, message: "Already booked" }, { status: 200 });
+    return Response.json({ data: alreadyBooked, message: "Already booked" }, { status: 401 });
   }
 
   // 4. Check for a scheduling conflict with a *different* workshop

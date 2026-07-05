@@ -1,0 +1,336 @@
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  gap: 1rem;
+  color: var(--secondary-gray);
+  text-align: center;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorText {
+  color: #DC2626;
+  font-size: 1rem;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 0.875rem;
+  cursor: pointer;
+  color: var(--secondary-gray);
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.backBtn:hover {
+  color: #111827;
+  border-color: #9CA3AF;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: var(--secondary-gray);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+  font-family: inherit;
+  padding: 0;
+}
+
+.backLink:hover {
+  color: #111827;
+}
+
+.bannerWrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2.5rem;
+}
+
+.banner {
+  width: 100%;
+  height: 360px;
+  object-fit: cover;
+  display: block;
+  background: #F3F4F6;
+}
+
+.bannerOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2rem;
+  background: linear-gradient(transparent, rgba(0,0,0,0.75));
+}
+
+.category {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(220, 38, 38, 0.9);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mainCol {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.description {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #374151;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.infoCard {
+  background: #F9FAFB;
+  border: 1px solid #F3F4F6;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.infoRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  color: var(--secondary-gray);
+}
+
+.infoRow > svg {
+  flex-shrink: 0;
+  color: var(--primary-red);
+}
+
+.infoRow > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.infoLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--secondary-gray);
+}
+
+.infoValue {
+  font-size: 0.9375rem;
+  color: #111827;
+  font-weight: 500;
+}
+
+.divider {
+  height: 1px;
+  background: #E5E7EB;
+  margin: 0 1.25rem;
+}
+
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stickyCard {
+  position: sticky;
+  top: 1.5rem;
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stickyTitle {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--secondary-gray);
+}
+
+.statRow > svg {
+  flex-shrink: 0;
+  color: var(--primary-red);
+}
+
+.textSuccess {
+  color: #059669;
+}
+
+.textDanger {
+  color: #DC2626;
+}
+
+.statusSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.statusBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+}
+
+.statusBadge > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.statusLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.statusValue {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.statusApproved {
+  background: #ECFDF5;
+  color: #065F46;
+}
+
+.statusPending {
+  background: #FFFBEB;
+  color: #92400E;
+}
+
+.statusAvailable {
+  background: #ECFDF5;
+  color: #065F46;
+}
+
+.statusFull {
+  background: #FEF2F2;
+  color: #991B1B;
+}
+
+.actionBtn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.bookBtn {
+  background: var(--primary-red);
+  color: #fff;
+}
+
+.bookBtn:hover:not(:disabled) {
+  background: var(--primary-red-hover, #B91C1C);
+}
+
+.cancelBtn {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  background: #FECACA;
+}

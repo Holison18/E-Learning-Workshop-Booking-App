@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { UploadCloud, X } from 'lucide-react';
+import { UploadCloud, X, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
@@ -22,6 +22,7 @@ type FormState = {
   capacity: number;
   location: string;
   facilitator: string;
+  facilitator_image_url: string;
   image_url: string;
   status: 'draft' | 'published';
 };
@@ -36,6 +37,7 @@ const emptyForm: FormState = {
   capacity: 50,
   location: '',
   facilitator: '',
+  facilitator_image_url: '',
   image_url: '',
   status: 'draft',
 };
@@ -69,6 +71,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
             capacity: data.capacity ?? 50,
             location: data.location ?? '',
             facilitator: data.facilitator ?? '',
+            facilitator_image_url: data.facilitator_image_url ?? '',
             image_url: data.image_url ?? '',
             status: (data.status as 'draft' | 'published') ?? 'draft',
           });
@@ -111,6 +114,32 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
     setUploading(false);
   };
 
+  const handleFacilitatorImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError('');
+
+    const body = new FormData();
+    body.append('file', file);
+
+    try {
+      const res = await fetch('/api/admin/upload/facilitator', { method: 'POST', body });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(`Image upload failed: ${data.error || 'Unknown error'}`);
+        setUploading(false);
+        return;
+      }
+      const data = await res.json();
+      setFormData((prev) => ({ ...prev, facilitator_image_url: data.url }));
+    } catch {
+      setError('Facilitator image upload failed: Network error');
+    }
+    setUploading(false);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -126,6 +155,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
       capacity: formData.capacity,
       location: formData.location,
       facilitator: formData.facilitator,
+      facilitator_image_url: formData.facilitator_image_url || null,
       image_url: formData.image_url || null,
       status: formData.status,
     };
@@ -213,6 +243,29 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                   onChange={handleChange}
                   required
                 />
+                <div className={styles.facilitatorUpload}>
+                  {formData.facilitator_image_url ? (
+                    <img src={formData.facilitator_image_url} alt="" className={styles.facilitatorAvatar} />
+                  ) : (
+                    <div className={styles.facilitatorAvatarPlaceholder}>
+                      <User size={20} />
+                    </div>
+                  )}
+                  <div>
+                    <label className={styles.avatarUploadBtn}>
+                      <UploadCloud size={14} />
+                      {formData.facilitator_image_url ? 'Change Photo' : 'Upload Photo'}
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg"
+                        className={styles.hiddenInput}
+                        onChange={handleFacilitatorImageSelect}
+                        disabled={uploading}
+                      />
+                    </label>
+                    <div className={styles.dropzoneHint}>Square image recommended</div>
+                  </div>
+                </div>
                 <div className={styles.textareaWrapper}>
                   <label className={styles.textareaLabel}>Detailed Description</label>
                   <textarea
