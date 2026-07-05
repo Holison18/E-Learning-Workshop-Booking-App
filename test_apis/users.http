@@ -1,0 +1,57 @@
+GET http://localhost:3000/api/admin/user
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+
+###
+
+POST http://localhost:3000/api/admin/workshop
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+    "title": "React Basics",
+    "description": "Intro workshop",
+    "facilitator": "John Doe",
+    "location": "Online",
+    "date": "2026-07-10",
+    "start_time": "10:00",
+    "end_time": "12:00",
+    "capacity": 30,
+    "category": "Web Development",
+    "status": "published",
+    "image_url": "nope"
+}
+
+
+
+###
+PUT http://localhost:3000/api/admin/workshop
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+    "id": "600cc72d-fea4-468a-9387-b14ec007adb3",
+    "title": "AI",
+    "description": "Intro workshop",
+    "facilitator": "Andrej Karpathy",
+    "location": "Online",
+    "date": "2026-07-10",
+    "start_time": "10:00",
+    "end_time": "12:00",
+    "capacity": 30,
+    "category": "Web Development",
+    "status": "published",
+    "image_url": "nope"
+}
+
+
+###
+###
+DELETE http://localhost:3000/api/admin/workshop
+Content-Type: application/json
+Authorization: Bearer YOUR_TOKEN_HERE
+
+{
+    "id": "600cc72d-fea4-468a-9387-b14ec007adb3"
+}

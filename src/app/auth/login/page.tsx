@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { requestApi } from '@/lib/api';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
 import { GoogleIcon } from '@/components/ui/icons/GoogleIcon';
@@ -34,13 +35,10 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: adminRow } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', data.user.id)
-      .maybeSingle();
+    const adminsResponse = await requestApi<{ data: { id: string }[] }>('/api/admin/admin');
+    const isAdmin = adminsResponse.data.some((admin) => admin.id === data.user.id);
 
-    router.push(adminRow ? '/admin/dashboard' : '/dashboard');
+    router.push(isAdmin ? '/admin/dashboard' : '/dashboard');
     router.refresh();
   };
 

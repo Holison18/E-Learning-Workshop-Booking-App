@@ -2,13 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
 import { ArrowLeft, Mail, Users, CheckCircle } from 'lucide-react';
 import { ReminderModal } from '@/components/admin/ReminderModal';
 import Link from 'next/link';
+import { requestApi } from '@/lib/api';
 import styles from './WorkshopDetails.module.css';
 
 type Participant = {
@@ -49,7 +50,7 @@ export default function WorkshopDetailsPage() {
       if (!id) return;
 
       const [workshopRes, bookingsRes] = await Promise.all([
-        supabase.from('workshops').select('*').eq('id', id).single(),
+        requestApi<{ data: Workshop[] }>('/api/admin/workshop'),
         supabase.from('bookings').select(`
           id,
           checked_in,
@@ -64,9 +65,9 @@ export default function WorkshopDetailsPage() {
         `).eq('workshop_id', id)
       ]);
 
-      if (workshopRes.data) setWorkshop(workshopRes.data);
+      setWorkshop(workshopRes.data.find((row) => row.id === id) || null);
       if (bookingsRes.data) {
-        // @ts-ignore
+        // @ts-expect-error Supabase join typing is narrower than the response payload here
         setBookings(bookingsRes.data as Booking[]);
       }
       setLoading(false);

@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card/Card';
+import { getSessionToken, requestApi } from '@/lib/api';
+import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 
 // Using QuickChart API for reliable QR code generation
@@ -26,33 +26,58 @@ export default function MyBookings() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState('');
 
   useEffect(() => {
     async function fetchBookings() {
-      if (!user) return;
-
-      const { data, error } = await supabase
-        .from('bookings')
-        .select(`
-          id,
-          checked_in,
-          workshops (
-            title,
-            date,
-            start_time,
-            location
-          )
-        `)
-        .eq('participant_id', user.id);
-
-      if (data) {
-        // @ts-ignore - Supabase types can be tricky with joins
-        setBookings(data as Booking[]);
+      if (!user) {
+        setLoading(false);
+        return;
       }
-      setLoading(false);
+
+      try {
+        const token = await getSessionToken();
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+
+        const response = await requestApi<{ data: Booking[] }>('/api/book', { token });
+        setBookings(response.data || []);
+      } catch (error) {
+        console.error('Failed to load bookings:', error);
+      } finally {
+        setLoading(false);
+      }
     }
     fetchBookings();
   }, [user]);
+
+  const handleCancelBooking = async (bookId: string) => {
+    if (!confirm('Cancel this booking?')) return;
+
+    try {
+      const token = await getSessionToken();
+      if (!token) {
+        alert('You must be signed in to cancel a booking.');
+        return;
+      }
+
+      setCancellingId(bookId);
+      await requestApi('/api/book', {
+        method: 'DELETE',
+        token,
+        body: { bookId },
+      });
+
+      setBookings((current) => current.filter((booking) => booking.id !== bookId));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to cancel booking.';
+      alert(message);
+    } finally {
+      setCancellingId('');
+    }
+  };
 
   if (loading) return <div>Loading your bookings...</div>;
 
@@ -69,7 +94,7 @@ export default function MyBookings() {
       {bookings.length === 0 ? (
         <Card>
           <CardContent style={{ padding: '3rem', textAlign: 'center' }}>
-            <p style={{ color: 'var(--secondary-gray)' }}>You haven't booked any workshops yet.</p>
+            <p style={{ color: 'var(--secondary-gray)' }}>You haven&apos;t booked any workshops yet.</p>
           </CardContent>
         </Card>
       ) : (
@@ -94,6 +119,16 @@ export default function MyBookings() {
                         ✓ Checked In
                       </div>
                     )}
+                      <div style={{ marginTop: '1rem' }}>
+                        <Button
+                          variant="outline"
+                          type="button"
+                          onClick={() => handleCancelBooking(booking.id)}
+                          disabled={cancellingId === booking.id}
+                        >
+                          {cancellingId === booking.id ? 'Cancelling...' : 'Cancel Booking'}
+                        </Button>
+                      </div>
                   </div>
                 </CardContent>
               </Card>

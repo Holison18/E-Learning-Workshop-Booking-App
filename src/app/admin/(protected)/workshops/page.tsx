@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Armchair, Pencil, Trash2, Eye } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { requestApi } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
@@ -35,12 +35,8 @@ export default function AdminWorkshops() {
   const [page, setPage] = useState(1);
 
   async function fetchWorkshops() {
-    const { data } = await supabase
-      .from('workshops')
-      .select('id, title, facilitator, location, category, status, date, start_time, end_time, capacity, seats_booked')
-      .order('date', { ascending: true })
-      .order('start_time', { ascending: true });
-    if (data) setWorkshops(data as Workshop[]);
+    const response = await requestApi<{ data: Workshop[] }>('/api/admin/workshop');
+    setWorkshops(response.data || []);
     setLoading(false);
   }
 
@@ -53,13 +49,17 @@ export default function AdminWorkshops() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this workshop? This will also delete all associated bookings.')) return;
 
-    await supabase.from('bookings').delete().eq('workshop_id', id);
+    const res = await fetch('/api/admin/workshop', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    });
 
-    const { error } = await supabase.from('workshops').delete().eq('id', id);
-    if (!error) {
+    if (res.ok) {
       setWorkshops(workshops.filter((w) => w.id !== id));
     } else {
-      alert('Error deleting workshop: ' + error.message);
+      const data = await res.json();
+      alert('Error deleting workshop: ' + (data.error || 'Unknown error'));
     }
   };
 

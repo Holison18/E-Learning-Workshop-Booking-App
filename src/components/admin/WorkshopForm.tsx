@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { UploadCloud, X } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
@@ -53,23 +52,29 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
     if (mode !== 'edit' || !workshopId) return;
 
     (async () => {
-      const { data, error: fetchError } = await supabase.from('workshops').select('*').eq('id', workshopId).single();
-      if (fetchError) {
-        setError(fetchError.message);
-      } else if (data) {
-        setFormData({
-          title: data.title ?? '',
-          description: data.description ?? '',
-          category: data.category ?? '',
-          date: data.date ?? '',
-          start_time: (data.start_time ?? '').slice(0, 5),
-          end_time: (data.end_time ?? '').slice(0, 5),
-          capacity: data.capacity ?? 50,
-          location: data.location ?? '',
-          facilitator: data.facilitator ?? '',
-          image_url: data.image_url ?? '',
-          status: (data.status as 'draft' | 'published') ?? 'draft',
-        });
+      try {
+        const res = await fetch(`/api/admin/workshop?id=${workshopId}`);
+        if (!res.ok) throw new Error('Failed to fetch workshop');
+        const json = await res.json();
+        const workshops: any[] = json.data || [];
+        const data = workshops.find((w: any) => w.id === workshopId);
+        if (data) {
+          setFormData({
+            title: data.title ?? '',
+            description: data.description ?? '',
+            category: data.category ?? '',
+            date: data.date ?? '',
+            start_time: (data.start_time ?? '').slice(0, 5),
+            end_time: (data.end_time ?? '').slice(0, 5),
+            capacity: data.capacity ?? 50,
+            location: data.location ?? '',
+            facilitator: data.facilitator ?? '',
+            image_url: data.image_url ?? '',
+            status: (data.status as 'draft' | 'published') ?? 'draft',
+          });
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load workshop');
       }
       setFetching(false);
     })();
@@ -87,18 +92,22 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
     setUploading(true);
     setError('');
 
-    const ext = file.name.split('.').pop();
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from('workshop-banners').upload(path, file);
+    const body = new FormData();
+    body.append('file', file);
 
-    if (uploadError) {
-      setError(`Banner upload failed: ${uploadError.message}`);
-      setUploading(false);
-      return;
+    try {
+      const res = await fetch('/api/admin/upload', { method: 'POST', body });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(`Banner upload failed: ${data.error || 'Unknown error'}`);
+        setUploading(false);
+        return;
+      }
+      const data = await res.json();
+      setFormData((prev) => ({ ...prev, image_url: data.url }));
+    } catch {
+      setError('Banner upload failed: Network error');
     }
-
-    const { data } = supabase.storage.from('workshop-banners').getPublicUrl(path);
-    setFormData((prev) => ({ ...prev, image_url: data.publicUrl }));
     setUploading(false);
   };
 
@@ -121,19 +130,20 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
       status: formData.status,
     };
 
-    const { error: submitError } =
-      mode === 'create'
-        ? await supabase.from('workshops').insert([{ ...payload, seats_booked: 0 }])
-        : await supabase.from('workshops').update(payload).eq('id', workshopId);
+    const res = await fetch('/api/admin/workshop', {
+      method: mode === 'create' ? 'POST' : 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(mode === 'create' ? payload : { ...payload, id: workshopId }),
+    });
 
-    if (submitError) {
-      setError(submitError.message);
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || 'Failed to save workshop');
       setLoading(false);
       return;
     }
 
     router.push('/admin/workshops');
-    router.refresh();
   };
 
   if (fetching) return <div>Loading workshop...</div>;
@@ -227,8 +237,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                     label="Workshop Date"
                     name="date"
                     type="date"
-                    min="2027-01-13"
-                    max="2027-01-17"
+                    min={new Date().toISOString().slice(0, 10)}
                     value={formData.date}
                     onChange={handleChange}
                     required

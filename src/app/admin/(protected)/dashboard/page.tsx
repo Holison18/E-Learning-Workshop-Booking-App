@@ -12,7 +12,6 @@ import {
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { Card, CardHeader, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
@@ -52,8 +51,8 @@ function formatTimeAgo(dateStr: string) {
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [totalWorkshops, setTotalWorkshops] = useState(0);
-  const [totalParticipants, setTotalParticipants] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
+  const [remainingSeats, setRemainingSeats] = useState(0);
   const [attendanceRate, setAttendanceRate] = useState(0);
   const [capacityUtilization, setCapacityUtilization] = useState(0);
   const [trend, setTrend] = useState<DayTrend[]>([]);
@@ -61,17 +60,11 @@ export default function AdminDashboard() {
   const [recentBookings, setRecentBookings] = useState<BookingRow[]>([]);
 
   async function fetchDashboardData() {
-    const [workshopsRes, participantsRes, bookingsRes] = await Promise.all([
-      supabase.from('workshops').select('id, title, date, capacity, seats_booked, status').order('date', { ascending: true }),
-      supabase.from('participants').select('id', { count: 'exact', head: true }),
-      supabase
-        .from('bookings')
-        .select('id, booked_at, checked_in, participants(first_name, last_name, organization_name), workshops(id, title)')
-        .order('booked_at', { ascending: false }),
-    ]);
+    const res = await fetch('/api/admin/dashboard');
+    const json = await res.json();
 
-    const workshops = (workshopsRes.data as WorkshopRow[]) || [];
-    const bookings = (bookingsRes.data as unknown as BookingRow[]) || [];
+    const workshops: WorkshopRow[] = json.workshops || [];
+    const bookings: BookingRow[] = json.bookings || [];
 
     let totalCapacity = 0;
     let totalBooked = 0;
@@ -80,13 +73,14 @@ export default function AdminDashboard() {
       totalBooked += w.seats_booked;
     });
 
+    setRemainingSeats(totalCapacity - totalBooked);
+
     const today = new Date();
     const upcoming = workshops.filter((w) => new Date(w.date) >= new Date(today.toDateString()));
     setRecentWorkshops((upcoming.length > 0 ? upcoming : workshops).slice(0, 4));
 
     setTotalWorkshops(workshops.length);
     setCapacityUtilization(totalCapacity > 0 ? Math.round((totalBooked / totalCapacity) * 100) : 0);
-    setTotalParticipants(participantsRes.count || 0);
     setTotalBookings(bookings.length);
     setAttendanceRate(bookings.length > 0 ? Math.round((bookings.filter((b) => b.checked_in).length / bookings.length) * 100) : 0);
     setRecentBookings(bookings.slice(0, 5));
@@ -121,7 +115,7 @@ export default function AdminDashboard() {
   const stats = [
     { label: 'Total Workshops', value: totalWorkshops, icon: <GraduationCap size={18} /> },
     { label: 'Total Bookings', value: totalBookings.toLocaleString(), icon: <CalendarCheck size={18} /> },
-    { label: 'Participants', value: totalParticipants.toLocaleString(), icon: <Users size={18} /> },
+    { label: 'Remaining Seats', value: remainingSeats.toLocaleString(), icon: <Users size={18} /> },
     { label: 'Attendance Rate', value: `${attendanceRate}%`, icon: <TrendingUp size={18} /> },
     { label: 'Capacity Utilized', value: `${capacityUtilization}%`, icon: <PieChart size={18} /> },
   ];

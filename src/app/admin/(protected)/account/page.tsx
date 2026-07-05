@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Mail, ShieldCheck, UserPlus, Check, UserMinus } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
+import { requestApi } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
@@ -15,13 +15,12 @@ type AdminRow = {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
-  role: 'super_admin' | 'coordinator';
-  status: 'active' | 'pending';
+  role: 'super_admin' | 'admin';
 };
 
 const roleLabel: Record<AdminRow['role'], string> = {
   super_admin: 'Super Administrator',
-  coordinator: 'Coordinator',
+  admin: 'Administrator',
 };
 
 export default function AdminAccountPage() {
@@ -33,13 +32,13 @@ export default function AdminAccountPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ email: '', role: 'coordinator' as AdminRow['role'] });
+  const [inviteForm, setInviteForm] = useState({ email: '', role: 'admin' as AdminRow['role'] });
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState('');
 
   async function fetchAdmins() {
-    const { data } = await supabase.from('admins').select('id, first_name, last_name, email, role, status').order('created_at', { ascending: true });
-    if (data) setAdmins(data as AdminRow[]);
+    const response = await requestApi<{ data: AdminRow[] }>('/api/admin/admin');
+    setAdmins(response.data || []);
     setLoading(false);
   }
 
@@ -77,13 +76,22 @@ export default function AdminAccountPage() {
     }
 
     setPasswordSaving(true);
-    const { error } = await supabase.auth.updateUser({ password: passwordForm.password });
-    if (error) {
-      setPasswordError(error.message);
-    } else {
-      setPasswordSuccess(true);
-      setPasswordForm({ password: '', confirmPassword: '' });
-      setChangingPassword(false);
+    try {
+      const res = await fetch('/api/admin/set-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordForm.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPasswordError(data.error || 'Failed to update password');
+      } else {
+        setPasswordSuccess(true);
+        setPasswordForm({ password: '', confirmPassword: '' });
+        setChangingPassword(false);
+      }
+    } catch {
+      setPasswordError('Network error');
     }
     setPasswordSaving(false);
   };
@@ -119,15 +127,10 @@ export default function AdminAccountPage() {
     if (insertError) {
       setInviteError(insertError.message);
     } else {
-      setInviteForm({ email: '', role: 'coordinator' });
+      setInviteForm({ email: '', role: 'admin' });
       fetchAdmins();
     }
     setInviting(false);
-  };
-
-  const handleActivate = async (id: string) => {
-    const { error } = await supabase.from('admins').update({ status: 'active' }).eq('id', id);
-    if (!error) fetchAdmins();
   };
 
   const handleRemove = async (id: string) => {
@@ -153,10 +156,10 @@ export default function AdminAccountPage() {
             <div className={styles.profileRole}>{displayRole} · KNUST E-Learning Portal</div>
 
             <div className={styles.infoRow}>
-              <Mail size={16} /> {displayEmail}
+              Email: {displayEmail}
             </div>
             <div className={styles.infoRow}>
-              <ShieldCheck size={16} /> {displayRole}
+              Role: {displayRole}
             </div>
 
             <div className={styles.sectionDivider}>
@@ -219,16 +222,7 @@ export default function AdminAccountPage() {
                   required
                 />
               </div>
-              <select
-                className={styles.roleSelect}
-                value={inviteForm.role}
-                onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as AdminRow['role'] })}
-              >
-                <option value="coordinator">Coordinator</option>
-                <option value="super_admin">Super Administrator</option>
-              </select>
               <Button type="submit" disabled={inviting}>
-                <UserPlus size={16} style={{ marginRight: '0.5rem' }} />
                 {inviting ? 'Adding...' : 'Add New Admin'}
               </Button>
               {inviteError && (
@@ -242,13 +236,12 @@ export default function AdminAccountPage() {
                   <tr>
                     <th>Administrator</th>
                     <th>Role</th>
-                    <th>Status</th>
                     <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {admins.length === 0 && (
-                    <tr><td colSpan={4} className={styles.emptyState}>No administrators yet.</td></tr>
+                    <tr><td colSpan={3} className={styles.emptyState}>No administrators yet.</td></tr>
                   )}
                   {admins.map((a) => (
                     <tr key={a.id}>
@@ -260,21 +253,15 @@ export default function AdminAccountPage() {
                         <div className={styles.adminEmail}>{a.email || '—'}</div>
                       </td>
                       <td><Badge variant={a.role === 'super_admin' ? 'primary' : 'info'}>{roleLabel[a.role]}</Badge></td>
-                      <td><Badge variant={a.status === 'active' ? 'success' : 'warning'}>{a.status}</Badge></td>
                       <td>
                         <div className={styles.actionCell}>
-                          {a.status === 'pending' && (
-                            <button className={styles.iconButton} onClick={() => handleActivate(a.id)} aria-label="Activate admin">
-                              <Check size={15} />
-                            </button>
-                          )}
                           {a.id !== user?.id && (
                             <button
                               className={`${styles.iconButton} ${styles.iconButtonDanger}`}
                               onClick={() => handleRemove(a.id)}
                               aria-label="Remove admin"
                             >
-                              <UserMinus size={15} />
+                              Remove
                             </button>
                           )}
                         </div>

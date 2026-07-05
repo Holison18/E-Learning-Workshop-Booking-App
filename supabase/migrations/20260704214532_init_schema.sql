@@ -79,21 +79,10 @@ ALTER TABLE public.bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admins ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.broadcasts ENABLE ROW LEVEL SECURITY;
 
--- Helper function: avoids infinite recursion in admin-checking policies.
--- A plain `EXISTS (SELECT 1 FROM public.admins WHERE admins.id = auth.uid())`
--- inside an admins policy re-triggers admins' own RLS, causing a cycle.
--- SECURITY DEFINER bypasses RLS since it runs as the function owner.
-CREATE OR REPLACE FUNCTION public.is_admin(check_user_id UUID)
-RETURNS BOOLEAN
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-STABLE
-AS $$
-  SELECT EXISTS (SELECT 1 FROM public.admins WHERE admins.id = check_user_id);
-$$;
 
-GRANT EXECUTE ON FUNCTION public.is_admin(UUID) TO authenticated, anon;
+
+
+
 
 -- Policies: participants
 DROP POLICY IF EXISTS "Participants can view their own profile" ON public.participants;
@@ -105,21 +94,6 @@ CREATE POLICY "Participants can update their own profile" ON public.participants
 DROP POLICY IF EXISTS "Participants can insert their own profile" ON public.participants;
 CREATE POLICY "Participants can insert their own profile" ON public.participants FOR INSERT WITH CHECK (auth.uid() = id);
 
-DROP POLICY IF EXISTS "Admins can view all participants" ON public.participants;
-CREATE POLICY "Admins can view all participants" ON public.participants FOR SELECT USING (public.is_admin(auth.uid()));
-
--- Policies: workshops
-DROP POLICY IF EXISTS "Anyone can view workshops" ON public.workshops;
-CREATE POLICY "Anyone can view workshops" ON public.workshops FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Admins can insert workshops" ON public.workshops;
-CREATE POLICY "Admins can insert workshops" ON public.workshops FOR INSERT WITH CHECK (public.is_admin(auth.uid()));
-
-DROP POLICY IF EXISTS "Admins can update workshops" ON public.workshops;
-CREATE POLICY "Admins can update workshops" ON public.workshops FOR UPDATE USING (public.is_admin(auth.uid()));
-
-DROP POLICY IF EXISTS "Admins can delete workshops" ON public.workshops;
-CREATE POLICY "Admins can delete workshops" ON public.workshops FOR DELETE USING (public.is_admin(auth.uid()));
 
 -- Policies: bookings
 DROP POLICY IF EXISTS "Participants can view their own bookings" ON public.bookings;
@@ -128,28 +102,11 @@ CREATE POLICY "Participants can view their own bookings" ON public.bookings FOR 
 DROP POLICY IF EXISTS "Participants can create bookings" ON public.bookings;
 CREATE POLICY "Participants can create bookings" ON public.bookings FOR INSERT WITH CHECK (auth.uid() = participant_id);
 
-DROP POLICY IF EXISTS "Admins can view all bookings" ON public.bookings;
-CREATE POLICY "Admins can view all bookings" ON public.bookings FOR SELECT USING (public.is_admin(auth.uid()));
 
-DROP POLICY IF EXISTS "Admins can update bookings" ON public.bookings;
-CREATE POLICY "Admins can update bookings" ON public.bookings FOR UPDATE USING (public.is_admin(auth.uid()));
-
--- Policies: admins
-DROP POLICY IF EXISTS "Admins can view admins" ON public.admins;
-CREATE POLICY "Admins can view admins" ON public.admins FOR SELECT USING (public.is_admin(auth.uid()));
-
-DROP POLICY IF EXISTS "Admins can insert admins" ON public.admins;
-CREATE POLICY "Admins can insert admins" ON public.admins FOR INSERT WITH CHECK (public.is_admin(auth.uid()));
-
-DROP POLICY IF EXISTS "Admins can update admins" ON public.admins;
-CREATE POLICY "Admins can update admins" ON public.admins FOR UPDATE USING (public.is_admin(auth.uid()));
 
 -- Policies: broadcasts
 DROP POLICY IF EXISTS "Anyone can view broadcasts" ON public.broadcasts;
 CREATE POLICY "Anyone can view broadcasts" ON public.broadcasts FOR SELECT USING (true);
-
-DROP POLICY IF EXISTS "Admins can insert broadcasts" ON public.broadcasts;
-CREATE POLICY "Admins can insert broadcasts" ON public.broadcasts FOR INSERT WITH CHECK (public.is_admin(auth.uid()));
 
 -- =====================================================================
 -- Storage: workshop banner images
@@ -163,17 +120,6 @@ DROP POLICY IF EXISTS "Anyone can view workshop banners" ON storage.objects;
 CREATE POLICY "Anyone can view workshop banners" ON storage.objects
     FOR SELECT USING (bucket_id = 'workshop-banners');
 
-DROP POLICY IF EXISTS "Admins can upload workshop banners" ON storage.objects;
-CREATE POLICY "Admins can upload workshop banners" ON storage.objects
-    FOR INSERT WITH CHECK (bucket_id = 'workshop-banners' AND public.is_admin(auth.uid()));
-
-DROP POLICY IF EXISTS "Admins can update workshop banners" ON storage.objects;
-CREATE POLICY "Admins can update workshop banners" ON storage.objects
-    FOR UPDATE USING (bucket_id = 'workshop-banners' AND public.is_admin(auth.uid()));
-
-DROP POLICY IF EXISTS "Admins can delete workshop banners" ON storage.objects;
-CREATE POLICY "Admins can delete workshop banners" ON storage.objects
-    FOR DELETE USING (bucket_id = 'workshop-banners' AND public.is_admin(auth.uid()));
 
 -- =====================================================================
 -- Trigger: keep workshops.seats_booked in sync with bookings

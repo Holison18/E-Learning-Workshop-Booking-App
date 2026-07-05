@@ -1,10 +1,5 @@
 import React from 'react';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <DashboardLayout admin={true}>
-      {children}
-    </DashboardLayout>
-  );
+export default function AdminRootLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
 }
