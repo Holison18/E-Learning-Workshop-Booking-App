@@ -52,7 +52,11 @@ function formatTimeAgo(dateStr: string) {
   return `${days}d ago`;
 }
 
+import { useAuth } from '@/contexts/AuthContext';
+import { CoordinatorScanner } from '@/components/admin/CoordinatorScanner';
+
 export default function AdminDashboard() {
+  const { adminRole } = useAuth();
   const [loading, setLoading] = useState(true);
   const [totalWorkshops, setTotalWorkshops] = useState(0);
   const [totalParticipants, setTotalParticipants] = useState(0);
@@ -65,6 +69,12 @@ export default function AdminDashboard() {
   const [recentBookings, setRecentBookings] = useState<BookingRow[]>([]);
 
   async function fetchDashboardData() {
+    // If coordinator, don't fetch analytics
+    if (adminRole === 'coordinator') {
+      setLoading(false);
+      return;
+    }
+
     const [workshopsRes, participantsRes, bookingsRes] = await Promise.all([
       supabase.from('workshops').select('id, title, date, capacity, seats_booked, status').order('date', { ascending: true }),
       supabase.from('participants').select('id', { count: 'exact', head: true }),
@@ -101,11 +111,21 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     (async () => {
-      await fetchDashboardData();
+      if (adminRole !== undefined) {
+        await fetchDashboardData();
+      }
     })();
-  }, []);
+  }, [adminRole]);
 
   if (loading) return <PageLoader label="Loading dashboard..." />;
+
+  if (adminRole === 'coordinator') {
+    return (
+      <div className={styles.page}>
+        <CoordinatorScanner />
+      </div>
+    );
+  }
 
   const trend: DayTrend[] = Array.from({ length: trendRangeDays }).map((_, i) => {
     const d = new Date();

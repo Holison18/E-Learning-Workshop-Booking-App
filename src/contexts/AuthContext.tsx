@@ -8,18 +8,21 @@ type AuthContextType = {
   user: User | null;
   loading: boolean;
   isAdmin: boolean;
+  adminRole: 'super_admin' | 'coordinator' | null;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
   isAdmin: false,
+  adminRole: null,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminRole, setAdminRole] = useState<'super_admin' | 'coordinator' | null>(null);
 
   useEffect(() => {
     // Check active sessions and sets the user
@@ -52,21 +55,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const { data, error } = await supabase
         .from('admins')
-        .select('id')
+        .select('id, role')
         .eq('id', userId)
         .single();
       
-      setIsAdmin(!!data);
+      if (data) {
+        setIsAdmin(true);
+        setAdminRole(data.role as 'super_admin' | 'coordinator');
+      } else {
+        setIsAdmin(false);
+        setAdminRole(null);
+      }
     } catch (err) {
       console.error('Error checking admin status:', err);
       setIsAdmin(false);
+      setAdminRole(null);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, isAdmin }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, adminRole }}>
       {children}
     </AuthContext.Provider>
   );

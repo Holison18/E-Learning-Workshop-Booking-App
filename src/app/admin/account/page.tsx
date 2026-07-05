@@ -37,9 +37,10 @@ export default function AdminAccountPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ email: '', role: 'coordinator' as AdminRow['role'] });
-  const [inviting, setInviting] = useState(false);
-  const [inviteError, setInviteError] = useState('');
+  const [generateForm, setGenerateForm] = useState({ firstName: '', lastName: '', email: '', role: 'coordinator' as AdminRow['role'], password: '' });
+  const [generating, setGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState('');
+  const [generatedCredentials, setGeneratedCredentials] = useState<{ email: string; password: string; role: string } | null>(null);
 
   async function fetchAdmins() {
     const { data } = await supabase.from('admins').select('id, first_name, last_name, email, role, status').order('created_at', { ascending: true });
@@ -86,41 +87,62 @@ export default function AdminAccountPage() {
     setPasswordSaving(false);
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
+  const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setInviteError('');
-    setInviting(true);
+    setGenerateError('');
+    setGenerating(true);
+    setGeneratedCredentials(null);
 
-    const { data: participant, error: lookupError } = await supabase
-      .from('participants')
-      .select('id, first_name, last_name, email')
-      .eq('email', inviteForm.email)
-      .maybeSingle();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
 
-    if (lookupError || !participant) {
-      setInviteError('No existing account found with that email. They need to create a participant account first.');
-      setInviting(false);
+    if (!token) {
+      setGenerateError('Authentication error. Please log in again.');
+      setGenerating(false);
       return;
     }
 
-    const { error: insertError } = await supabase.from('admins').insert([
-      {
-        id: participant.id,
-        first_name: participant.first_name,
-        last_name: participant.last_name,
-        email: participant.email,
-        role: inviteForm.role,
-        status: 'pending',
-      },
-    ]);
+    try {
+      const response = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(generateForm)
+      });
 
-    if (insertError) {
-      setInviteError(insertError.message);
-    } else {
-      setInviteForm({ email: '', role: 'coordinator' });
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate credentials');
+      }
+
+      setGeneratedCredentials({
+        email: generateForm.email,
+        password: generateForm.password,
+        role: generateForm.role
+      });
+      
+      setGenerateForm({ firstName: '', lastName: '', email: '', role: 'coordinator', password: '' });
       fetchAdmins();
+    } catch (err: any) {
+      setGenerateError(err.message);
+    } finally {
+      setGenerating(false);
     }
-    setInviting(false);
+  };
+
+  const generateCoordinatorCode = () => {
+    const randomId = Math.floor(1000 + Math.random() * 9000);
+    const randomPass = Math.random().toString(36).slice(-8);
+    setGenerateForm({
+      firstName: 'Event',
+      lastName: `Coordinator ${randomId}`,
+      email: `coordinator-${randomId}@knust.edu.gh`,
+      role: 'coordinator',
+      password: randomPass
+    });
   };
 
   const handleActivate = async (id: string) => {
@@ -203,102 +225,154 @@ export default function AdminAccountPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent>
-            <div className={styles.teamHeader}>
-              <h2 className={styles.teamTitle}>Team Management</h2>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--secondary-gray)' }}>
-                Invite an existing participant account as an administrator.
-              </span>
-            </div>
-
-            <form onSubmit={handleInvite} className={styles.addAdminForm}>
-              <div className={styles.addAdminField}>
-                <Input
-                  label="Email address"
-                  type="email"
-                  placeholder="colleague@knust.edu.gh"
-                  value={inviteForm.email}
-                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                  required
-                />
+        {currentAdmin?.role === 'super_admin' && (
+          <Card>
+            <CardContent>
+              <div className={styles.teamHeader}>
+                <h2 className={styles.teamTitle}>Team Management</h2>
+                <span style={{ fontSize: '0.8125rem', color: 'var(--secondary-gray)' }}>
+                  Generate credentials for new administrators or coordinators.
+                </span>
               </div>
-              <select
-                className={styles.roleSelect}
-                value={inviteForm.role}
-                onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as AdminRow['role'] })}
-                aria-label="Role for new administrator"
-              >
-                <option value="coordinator">Coordinator</option>
-                <option value="super_admin">Super Administrator</option>
-              </select>
-              <Button type="submit" disabled={inviting}>
-                <UserPlus size={16} style={{ marginRight: '0.5rem' }} />
-                {inviting ? 'Adding...' : 'Add New Admin'}
-              </Button>
-              {inviteError && (
-                <div style={{ width: '100%', color: 'var(--primary-red)', fontSize: '0.8125rem' }}>{inviteError}</div>
-              )}
-            </form>
 
-            <div className={styles.tableWrap}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Administrator</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {admins.length === 0 && (
-                    <tr><td colSpan={4} className={styles.emptyState}>No administrators yet.</td></tr>
-                  )}
-                  {admins.map((a) => {
-                    const adminName = a.first_name ? `${a.first_name} ${a.last_name || ''}` : 'Unknown';
-                    return (
-                    <tr key={a.id}>
-                      <td>
-                        <div className={styles.adminRow}>
-                          <Avatar user={{ id: a.id }} name={adminName} size={32} />
-                          <div>
-                            <div className={styles.adminName}>
-                              {adminName}
-                              {a.id === user?.id && ' (you)'}
-                            </div>
-                            <div className={styles.adminEmail}>{a.email || '—'}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td><Badge variant={a.role === 'super_admin' ? 'primary' : 'info'}>{roleLabel[a.role]}</Badge></td>
-                      <td><Badge variant={a.status === 'active' ? 'success' : 'warning'}>{a.status}</Badge></td>
-                      <td>
-                        <div className={styles.actionCell}>
-                          {a.status === 'pending' && (
-                            <button className={styles.iconButton} onClick={() => handleActivate(a.id)} aria-label="Activate admin">
-                              <Check size={15} />
-                            </button>
-                          )}
-                          {a.id !== user?.id && (
-                            <button
-                              className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                              onClick={() => handleRemove(a.id)}
-                              aria-label="Remove admin"
-                            >
-                              <UserMinus size={15} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
+              {generatedCredentials && (
+                <div style={{ backgroundColor: 'var(--success-green)', color: 'white', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                  <h3 style={{ margin: '0 0 0.5rem', fontSize: '1rem' }}>Credentials Generated Successfully!</h3>
+                  <p style={{ margin: '0 0 1rem', fontSize: '0.875rem', opacity: 0.9 }}>Please copy these credentials securely and share them with the {generatedCredentials.role === 'coordinator' ? 'coordinator' : 'administrator'}. They will use this to log in to the Admin Portal.</p>
+                  <div style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '4px', fontFamily: 'monospace' }}>
+                    <strong>Email:</strong> {generatedCredentials.email}<br />
+                    <strong>Password:</strong> {generatedCredentials.password}
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleGenerate} className={styles.addAdminForm} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', alignItems: 'end' }}>
+                <div>
+                  <Input
+                    label="First Name"
+                    type="text"
+                    placeholder="Kwame"
+                    value={generateForm.firstName}
+                    onChange={(e) => setGenerateForm({ ...generateForm, firstName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Input
+                    label="Last Name"
+                    type="text"
+                    placeholder="Mensah"
+                    value={generateForm.lastName}
+                    onChange={(e) => setGenerateForm({ ...generateForm, lastName: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Input
+                    label="Email address"
+                    type="email"
+                    placeholder="colleague@knust.edu.gh"
+                    value={generateForm.email}
+                    onChange={(e) => setGenerateForm({ ...generateForm, email: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <Input
+                    label="Initial Password"
+                    type="text"
+                    placeholder="Enter or generate password"
+                    value={generateForm.password}
+                    onChange={(e) => setGenerateForm({ ...generateForm, password: e.target.value })}
+                    required
+                  />
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--secondary-gray)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Role</div>
+                  <select
+                    className={styles.roleSelect}
+                    value={generateForm.role}
+                    onChange={(e) => setGenerateForm({ ...generateForm, role: e.target.value as AdminRow['role'] })}
+                    aria-label="Role for new administrator"
+                    style={{ width: '100%', marginBottom: 0 }}
+                  >
+                    <option value="coordinator">Coordinator</option>
+                    <option value="super_admin">Super Administrator</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <Button type="button" variant="outline" onClick={generateCoordinatorCode} style={{ flex: 1, padding: '0 0.5rem' }}>
+                    Auto-Fill Coordinator
+                  </Button>
+                  <Button type="submit" disabled={generating} style={{ flex: 1 }}>
+                    <UserPlus size={16} style={{ marginRight: '0.5rem' }} />
+                    {generating ? 'Adding...' : 'Add'}
+                  </Button>
+                </div>
+                {generateError && (
+                  <div style={{ gridColumn: '1 / -1', color: 'var(--primary-red)', fontSize: '0.8125rem' }}>{generateError}</div>
+                )}
+              </form>
+
+              <div className={styles.tableWrap}>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>Administrator</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Action</th>
                     </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                  </thead>
+                  <tbody>
+                    {admins.length === 0 && (
+                      <tr><td colSpan={4} className={styles.emptyState}>No administrators yet.</td></tr>
+                    )}
+                    {admins.map((a) => {
+                      const adminName = a.first_name ? `${a.first_name} ${a.last_name || ''}` : 'Unknown';
+                      return (
+                      <tr key={a.id}>
+                        <td>
+                          <div className={styles.adminRow}>
+                            <Avatar user={{ id: a.id }} name={adminName} size={32} />
+                            <div>
+                              <div className={styles.adminName}>
+                                {adminName}
+                                {a.id === user?.id && ' (you)'}
+                              </div>
+                              <div className={styles.adminEmail}>{a.email || '—'}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><Badge variant={a.role === 'super_admin' ? 'primary' : 'info'}>{roleLabel[a.role]}</Badge></td>
+                        <td><Badge variant={a.status === 'active' ? 'success' : 'warning'}>{a.status}</Badge></td>
+                        <td>
+                          <div className={styles.actionCell}>
+                            {a.status === 'pending' && (
+                              <button className={styles.iconButton} onClick={() => handleActivate(a.id)} aria-label="Activate admin">
+                                <Check size={15} />
+                              </button>
+                            )}
+                            {a.id !== user?.id && (
+                              <button
+                                className={`${styles.iconButton} ${styles.iconButtonDanger}`}
+                                onClick={() => handleRemove(a.id)}
+                                aria-label="Remove admin"
+                              >
+                                <UserMinus size={15} />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

@@ -27,7 +27,7 @@ import { NotificationBell } from './NotificationBell';
 import { Avatar } from '@/components/ui/avatar/Avatar';
 
 export default function DashboardLayout({ children, admin = false }: { children: React.ReactNode, admin?: boolean }) {
-  const { user, loading, isAdmin } = useAuth();
+  const { user, loading, isAdmin, adminRole } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -39,7 +39,15 @@ export default function DashboardLayout({ children, admin = false }: { children:
     if (!loading && user && admin && !isAdmin) {
       router.push('/dashboard');
     }
-  }, [user, loading, admin, isAdmin, router]);
+    
+    // Route guard for Coordinators
+    if (!loading && user && admin && adminRole === 'coordinator') {
+      const allowedPaths = ['/admin/dashboard', '/admin/account'];
+      if (!allowedPaths.includes(pathname)) {
+        router.push('/admin/dashboard');
+      }
+    }
+  }, [user, loading, admin, isAdmin, adminRole, pathname, router]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -58,8 +66,10 @@ export default function DashboardLayout({ children, admin = false }: { children:
 
   const adminLinks = [
     { href: '/admin/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
-    { href: '/admin/workshops', label: 'Workshops', icon: <GraduationCap size={18} /> },
-    { href: '/admin/notifications', label: 'Notifications', icon: <Bell size={18} /> },
+    ...(adminRole === 'super_admin' ? [
+      { href: '/admin/workshops', label: 'Workshops', icon: <GraduationCap size={18} /> },
+      { href: '/admin/notifications', label: 'Notifications', icon: <Bell size={18} /> },
+    ] : []),
   ];
 
   const links = admin ? adminLinks : participantLinks;
@@ -94,7 +104,7 @@ export default function DashboardLayout({ children, admin = false }: { children:
         ))}
       </nav>
 
-      {isAdmin && (
+      {isAdmin && adminRole === 'super_admin' && (
         <Link
           href={admin ? '/dashboard' : '/admin/dashboard'}
           className={styles.viewSwitch}
@@ -169,10 +179,10 @@ export default function DashboardLayout({ children, admin = false }: { children:
             <Menu size={22} />
           </button>
           <Suspense fallback={<div className={styles.searchBar} />}>
-            <TopbarSearch admin={admin} />
+            {(!admin || adminRole === 'super_admin') && <TopbarSearch admin={admin} />}
           </Suspense>
           <div className={styles.topbarActions}>
-            <NotificationBell user={user} admin={admin} />
+            {(!admin || adminRole === 'super_admin') && <NotificationBell user={user} admin={admin} />}
           </div>
         </header>
 

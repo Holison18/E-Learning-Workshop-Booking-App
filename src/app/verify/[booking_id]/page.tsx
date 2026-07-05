@@ -26,7 +26,7 @@ export default function VerifyBookingPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
-      router.push(`/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
+      router.push(`/admin/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
       return;
     }
     if (!isAdmin) {

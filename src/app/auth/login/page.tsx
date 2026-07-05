@@ -34,16 +34,10 @@ export default function LoginPage() {
       return;
     }
 
-    const { data: adminRow } = await supabase
-      .from('admins')
-      .select('id')
-      .eq('id', data.user.id)
-      .maybeSingle();
-
     const searchParams = new URLSearchParams(window.location.search);
     const redirectTo = searchParams.get('redirectTo');
 
-    router.push(redirectTo || (adminRow ? '/admin/dashboard' : '/dashboard'));
+    router.push(redirectTo || '/dashboard');
     router.refresh();
   };
 
