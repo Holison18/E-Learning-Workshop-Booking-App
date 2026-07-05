@@ -47,9 +47,21 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--secondary-black);
+  font-weight: 700;
   margin-bottom: 0.5rem;
   line-height: 1.2;
 }
+
+/* Explicit scale so page titles render the same everywhere - without this,
+   a bare <h1>/<h2> falls back to the browser's UA default, which some
+   browsers shrink further depending on how deep it's nested in sectioning
+   elements (<section>/<article>), making page titles look inconsistent
+   across pages for reasons that have nothing to do with intentional design. */
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.375rem; }
+h3 { font-size: 1.125rem; }
+h4 { font-size: 1rem; }
+h5, h6 { font-size: 0.9375rem; }
 
 a {
   color: var(--primary-red);

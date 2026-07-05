@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
+import { Badge } from '@/components/ui/badge/Badge';
 import { PageLoader } from '@/components/ui/spinner/PageLoader';
 import { useToast } from '@/components/ui/toast/ToastProvider';
 import { useConfirm } from '@/components/ui/confirm-dialog/ConfirmDialogProvider';
@@ -138,9 +139,9 @@ export default function MyBookings() {
               </span>
             </div>
             {booking.checked_in && (
-              <div className={styles.checkedInBadge}>
-                <CheckCircle2 size={16} aria-hidden="true" /> Checked In
-              </div>
+              <Badge variant="success" className={styles.checkedInBadge}>
+                <CheckCircle2 size={13} aria-hidden="true" /> Checked In
+              </Badge>
             )}
           </div>
         </CardContent>

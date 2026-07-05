@@ -1,6 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -272,44 +273,48 @@ function ParticipantDashboard() {
       <div key={ws.id} className={`${styles.workshopCard} ${isStaged ? styles.workshopCardSelected : ''}`}>
         <WorkshopThumbnail imageUrl={ws.image_url} title={ws.title} category={ws.category} className={styles.workshopImage} />
         <div className={styles.workshopContent}>
-          <div className={styles.workshopTopRow}>
-            <span className={styles.workshopCategory}>{(ws.category || 'General').toUpperCase()}</span>
-            <Badge variant={seatsBadgeVariant}>{isFull ? 'Full' : `${seatsLeft} left`}</Badge>
-          </div>
-          <h4 className={styles.workshopTitle}>{ws.title}</h4>
-          <p className={styles.workshopDesc}>{ws.description}</p>
-
-          <div className={styles.workshopSpacer} />
-
-          {ws.facilitator && (
-            <div className={styles.workshopFacilitator}>
-              <User size={13} aria-hidden="true" /> {ws.facilitator}
+          <div className={styles.workshopMain}>
+            <div className={styles.workshopTopRow}>
+              <span className={styles.workshopCategory}>{(ws.category || 'General').toUpperCase()}</span>
+              {ws.facilitator && (
+                <>
+                  <span className={styles.workshopDot} aria-hidden="true">&middot;</span>
+                  <span className={styles.workshopFacilitator}>
+                    <User size={12} aria-hidden="true" /> {ws.facilitator}
+                  </span>
+                </>
+              )}
             </div>
-          )}
+            <h4 className={styles.workshopTitle}>{ws.title}</h4>
+            <p className={styles.workshopDesc}>{ws.description}</p>
+          </div>
 
-          <div className={styles.workshopFooter}>
-            {isBooked ? (
-              <Link href="/bookings" className={styles.workshopBtnNeutral}>
-                Booked · Manage
-              </Link>
-            ) : isFull && !isStaged ? (
-              <button className={styles.workshopBtnDisabled} disabled>Full</button>
-            ) : conflict ? (
-              <button className={styles.workshopBtnDisabled} disabled title={`Conflicts with "${conflict.title}"`}>
-                Unavailable
-              </button>
-            ) : (
-              <button
-                className={isStaged ? styles.workshopBtnSelected : styles.workshopBtnAttend}
-                onClick={() => toggleSelection(ws)}
-              >
-                {isStaged ? (
-                  <>
-                    <Check size={15} aria-hidden="true" /> Selected
-                  </>
-                ) : 'Attend'}
-              </button>
-            )}
+          <div className={styles.workshopSide}>
+            <Badge variant={seatsBadgeVariant}>{isFull ? 'Full' : `${seatsLeft} left`}</Badge>
+            <div className={styles.workshopFooter}>
+              {isBooked ? (
+                <Link href="/bookings" className={styles.workshopBtnNeutral}>
+                  Booked · Manage
+                </Link>
+              ) : isFull && !isStaged ? (
+                <button className={styles.workshopBtnDisabled} disabled>Full</button>
+              ) : conflict ? (
+                <button className={styles.workshopBtnDisabled} disabled title={`Conflicts with "${conflict.title}"`}>
+                  Unavailable
+                </button>
+              ) : (
+                <button
+                  className={isStaged ? styles.workshopBtnSelected : styles.workshopBtnAttend}
+                  onClick={() => toggleSelection(ws)}
+                >
+                  {isStaged ? (
+                    <>
+                      <Check size={15} aria-hidden="true" /> Selected
+                    </>
+                  ) : 'Attend'}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -321,6 +326,14 @@ function ParticipantDashboard() {
       {!query && (
         <>
           <section className={styles.hero}>
+            <Image
+              src="/images/logo/kec-mark-white.png"
+              alt=""
+              width={482}
+              height={243}
+              className={styles.heroLogoBg}
+              aria-hidden="true"
+            />
             <div className={styles.heroContent}>
               {nextSession && <span className={styles.heroEyebrow}>Up next · {formatRelativeDay(nextSession.date)}</span>}
               <h1 className={styles.heroTitle}>Welcome back, {firstName}</h1>
@@ -335,14 +348,6 @@ function ParticipantDashboard() {
               </div>
             </div>
             <div className={styles.heroGraphic}>
-              <Image
-                src="/images/logo/kec-mark-white.png"
-                alt=""
-                width={482}
-                height={243}
-                className={styles.graphicWatermark}
-                aria-hidden="true"
-              />
               <div className={styles.graphicCountdown}>
                 <span className={styles.graphicNumber}>{nextSession ? Math.max(daysUntil(nextSession.date), 0) : workshops.length}</span>
                 <span className={styles.graphicCaption}>
@@ -459,14 +464,7 @@ function ParticipantDashboard() {
                       <Clock size={18} /> {formattedTimeRange}
                     </h4>
 
-                    <div
-                      className={styles.timeSlotGrid}
-                      style={{
-                        gridTemplateColumns: slotWorkshops.length === 1
-                          ? 'minmax(0, 400px)'
-                          : `repeat(${Math.min(slotWorkshops.length, 3)}, minmax(0, 1fr))`,
-                      }}
-                    >
+                    <div className={styles.timeSlotGrid}>
                       {slotWorkshops.map((ws) => renderWorkshopCard(ws))}
                     </div>
                   </div>
@@ -483,8 +481,13 @@ function ParticipantDashboard() {
         )}
       </section>
 
-      {/* Floating confirmation overlay for staged, multi-select bookings */}
-      {stagedBookings.size > 0 && (
+      {/* Portaled to document.body: the page root has .animate-fade-in, whose
+          fadeIn keyframes animate `transform` - forwards fill-mode keeps a
+          resting transform forever, which creates a containing block for any
+          position:fixed descendant. Without the portal this bar would be
+          pinned to that div's box instead of the viewport, so it'd scroll
+          away instead of staying fixed. */}
+      {stagedBookings.size > 0 && createPortal(
         <div className={styles.actionBarWrapper}>
           <div className={styles.actionBar}>
             <div className={styles.actionBarIcon}>
@@ -510,7 +513,8 @@ function ParticipantDashboard() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
