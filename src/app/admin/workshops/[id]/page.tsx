@@ -187,7 +187,8 @@ export default function WorkshopDetailsPage() {
         <CardContent style={{ padding: 0 }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ margin: 0, fontSize: '1.125rem' }}>Participant Roster</h2>
-            <Button variant="outline" size="sm" onClick={handleDownloadCSV} icon={<Download size={16} />}>
+            <Button variant="outline" onClick={handleDownloadCSV} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Download size={16} />
               Download CSV
             </Button>
           </div>
