@@ -8,10 +8,15 @@ import { CheckCircle2, XCircle, Loader2, CalendarDays, Clock, MapPin } from 'luc
 import { useParams } from 'next/navigation';
 import { useToast } from '@/components/ui/toast/ToastProvider';
 
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+
 export default function VerifyBookingPage() {
   const params = useParams();
   const bookingId = params.booking_id as string;
   const toast = useToast();
+  const router = useRouter();
+  const { user, loading: authLoading, isAdmin } = useAuth();
 
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -19,6 +24,16 @@ export default function VerifyBookingPage() {
   const [updating, setUpdating] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push(`/auth/login?redirectTo=${encodeURIComponent(window.location.pathname)}`);
+      return;
+    }
+    if (!isAdmin) {
+      setLoading(false);
+      return;
+    }
+
     async function fetchBooking() {
       const { data, error } = await supabase
         .from('bookings')
@@ -50,7 +65,7 @@ export default function VerifyBookingPage() {
     }
     
     if (bookingId) fetchBooking();
-  }, [bookingId]);
+  }, [bookingId, user, authLoading, isAdmin, router]);
 
   const handleCheckIn = async () => {
     setUpdating(true);

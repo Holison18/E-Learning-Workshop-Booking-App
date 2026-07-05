@@ -40,7 +40,10 @@ export default function LoginPage() {
       .eq('id', data.user.id)
       .maybeSingle();
 
-    router.push(adminRow ? '/admin/dashboard' : '/dashboard');
+    const searchParams = new URLSearchParams(window.location.search);
+    const redirectTo = searchParams.get('redirectTo');
+
+    router.push(redirectTo || (adminRow ? '/admin/dashboard' : '/dashboard'));
     router.refresh();
   };
 
@@ -48,10 +51,13 @@ export default function LoginPage() {
     setGoogleLoading(true);
     setError('');
 
+    const searchParams = new URLSearchParams(window.location.search);
+    const redirectTo = searchParams.get('redirectTo') || '/dashboard';
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}${redirectTo}`,
       },
     });
 
