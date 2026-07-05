@@ -34,6 +34,13 @@ export default function RegisterPage() {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
+      options: {
+        data: {
+          first_name: formData.firstName,
+          last_name: formData.lastName,
+          phone: formData.phone,
+        },
+      },
     });
 
     if (authError) {
@@ -57,8 +64,9 @@ export default function RegisterPage() {
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // Fallback: we might want to clean up or just show an error.
-        // Usually Supabase triggers are better for this, but this works if they are logged in automatically.
+        setError('Your account was created, but we could not set up your profile. Please contact support before booking workshops.');
+        setLoading(false);
+        return;
       }
 
       if (authData.session) {

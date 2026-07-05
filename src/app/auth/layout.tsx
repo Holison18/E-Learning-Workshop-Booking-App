@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { Repeat } from 'lucide-react';
+import Image from 'next/image';
 import styles from './AuthLayout.module.css';
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
@@ -9,10 +9,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className={styles.formPane}>
         <div className={styles.formPaneInner}>
           <Link href="/" className={styles.logo}>
-            <span className={styles.logoMark}>
-              <Repeat size={20} />
-            </span>
-            <span className={styles.logoText}>SocialRepeat</span>
+            <Image
+              src="/images/logo/knust-elearning-logo.png"
+              alt="KNUST E-Learning Centre"
+              width={1161}
+              height={447}
+              className={styles.logoImage}
+              priority
+            />
           </Link>
 
           <div className={styles.content}>{children}</div>

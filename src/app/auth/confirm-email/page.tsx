@@ -47,7 +47,7 @@ function ConfirmEmailContent() {
           </Button>
         </a>
         <Button type="button" variant="dark" fullWidth onClick={handleResend} disabled={!email || status === 'sending'}>
-          {status === 'sending' ? 'RESENDING...' : 'CONTINUE UX'}
+          {status === 'sending' ? 'RESENDING...' : 'RESEND EMAIL'}
         </Button>
       </div>
 

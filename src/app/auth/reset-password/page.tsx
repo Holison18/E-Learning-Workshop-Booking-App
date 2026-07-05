@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
           minLength={6}
         />
         <Button type="submit" fullWidth disabled={loading}>
-          {loading ? 'UPDATING...' : 'SIGN UP'}
+          {loading ? 'UPDATING...' : 'UPDATE PASSWORD'}
         </Button>
       </form>
 

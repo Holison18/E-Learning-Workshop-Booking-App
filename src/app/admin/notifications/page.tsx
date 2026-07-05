@@ -7,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
+import { PageLoader } from '@/components/ui/spinner/PageLoader';
+import { useToast } from '@/components/ui/toast/ToastProvider';
 import styles from './AdminNotifications.module.css';
 
 type Broadcast = {
@@ -19,6 +21,12 @@ type Broadcast = {
   sent_at: string;
 };
 
+type WorkshopOption = {
+  id: string;
+  title: string;
+  seats_booked: number;
+};
+
 const PAGE_SIZE = 8;
 
 const badgeVariant: Record<Broadcast['status'], 'success' | 'warning' | 'danger'> = {
@@ -28,8 +36,10 @@ const badgeVariant: Record<Broadcast['status'], 'success' | 'warning' | 'danger'
 };
 
 export default function AdminNotifications() {
+  const toast = useToast();
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
   const [participantCount, setParticipantCount] = useState(0);
+  const [workshopOptions, setWorkshopOptions] = useState<WorkshopOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [composing, setComposing] = useState(false);
   const [sending, setSending] = useState(false);
@@ -38,12 +48,14 @@ export default function AdminNotifications() {
   const [formData, setFormData] = useState({ title: '', message: '', recipient_group: 'All Participants' });
 
   async function fetchData() {
-    const [broadcastsRes, participantsRes] = await Promise.all([
+    const [broadcastsRes, participantsRes, workshopsRes] = await Promise.all([
       supabase.from('broadcasts').select('id, title, message, recipient_group, recipient_count, status, sent_at').order('sent_at', { ascending: false }),
       supabase.from('participants').select('id', { count: 'exact', head: true }),
+      supabase.from('workshops').select('id, title, seats_booked').eq('status', 'published').order('date', { ascending: true }),
     ]);
     if (broadcastsRes.data) setBroadcasts(broadcastsRes.data as Broadcast[]);
     setParticipantCount(participantsRes.count || 0);
+    if (workshopsRes.data) setWorkshopOptions(workshopsRes.data as WorkshopOption[]);
     setLoading(false);
   }
 
@@ -64,10 +76,13 @@ export default function AdminNotifications() {
     const { data: sessionData } = await supabase.auth.getSession();
     const adminId = sessionData.session?.user.id;
     if (!adminId) {
-      alert('You must be logged in as an admin to send announcements.');
+      toast.error('You must be logged in as an admin to send announcements.');
       setSending(false);
       return;
     }
+
+    const targetWorkshop = workshopOptions.find((w) => `workshop_${w.id}` === formData.recipient_group);
+    const recipientCount = targetWorkshop ? targetWorkshop.seats_booked : participantCount;
 
     const { error } = await supabase.from('broadcasts').insert([
       {
@@ -75,16 +90,17 @@ export default function AdminNotifications() {
         title: formData.title,
         message: formData.message,
         recipient_group: formData.recipient_group,
-        recipient_count: participantCount,
+        recipient_count: recipientCount,
         status: 'sent',
       },
     ]);
 
     if (error) {
-      alert('Error sending announcement: ' + error.message);
+      toast.error('Error sending announcement: ' + error.message);
     } else {
       setFormData({ title: '', message: '', recipient_group: 'All Participants' });
       setComposing(false);
+      toast.success('Announcement sent successfully.');
       fetchData();
     }
     setSending(false);
@@ -121,7 +137,7 @@ export default function AdminNotifications() {
     URL.revokeObjectURL(url);
   };
 
-  if (loading) return <div className={styles.emptyState}>Loading announcements...</div>;
+  if (loading) return <PageLoader label="Loading announcements..." />;
 
   return (
     <div className={styles.page}>
@@ -163,9 +179,14 @@ export default function AdminNotifications() {
             <h2 className={styles.sectionTitle} style={{ marginBottom: '1.25rem' }}>Compose Announcement</h2>
             <form onSubmit={handleCompose} className={styles.composeForm}>
               <div className={styles.textareaWrapper}>
-                <label className={styles.textareaLabel}>Recipients</label>
-                <select name="recipient_group" value={formData.recipient_group} onChange={handleChange}>
+                <label className={styles.textareaLabel} htmlFor="recipient-group">Recipients</label>
+                <select id="recipient-group" name="recipient_group" value={formData.recipient_group} onChange={handleChange}>
                   <option value="All Participants">All Participants ({participantCount.toLocaleString()})</option>
+                  {workshopOptions.map((w) => (
+                    <option key={w.id} value={`workshop_${w.id}`}>
+                      {w.title} ({w.seats_booked.toLocaleString()} registered)
+                    </option>
+                  ))}
                 </select>
               </div>
               <Input
@@ -177,8 +198,9 @@ export default function AdminNotifications() {
                 required
               />
               <div className={styles.textareaWrapper}>
-                <label className={styles.textareaLabel}>Message</label>
+                <label className={styles.textareaLabel} htmlFor="announcement-message">Message</label>
                 <textarea
+                  id="announcement-message"
                   name="message"
                   className={styles.textarea}
                   placeholder="Type your announcement here..."
@@ -205,6 +227,7 @@ export default function AdminNotifications() {
                 className={styles.filterSelect}
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value as typeof statusFilter); setPage(1); }}
+                aria-label="Filter by status"
               >
                 <option value="all">All Statuses</option>
                 <option value="sent">Sent</option>
@@ -254,17 +277,19 @@ export default function AdminNotifications() {
               Showing {filtered.length === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} announcements
             </span>
             <div className={styles.pager}>
-              <button className={styles.pageButton} disabled={currentPage === 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>‹</button>
+              <button className={styles.pageButton} disabled={currentPage === 1} onClick={() => setPage((p) => Math.max(1, p - 1))} aria-label="Previous page">‹</button>
               {Array.from({ length: totalPages }).map((_, i) => (
                 <button
                   key={i}
                   className={`${styles.pageButton} ${currentPage === i + 1 ? styles.pageButtonActive : ''}`}
                   onClick={() => setPage(i + 1)}
+                  aria-label={`Go to page ${i + 1}`}
+                  aria-current={currentPage === i + 1 ? 'page' : undefined}
                 >
                   {i + 1}
                 </button>
               ))}
-              <button className={styles.pageButton} disabled={currentPage === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>›</button>
+              <button className={styles.pageButton} disabled={currentPage === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} aria-label="Next page">›</button>
             </div>
           </div>
         </CardContent>

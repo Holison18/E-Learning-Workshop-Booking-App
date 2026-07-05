@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button/Button';
 import { Input } from '@/components/ui/input/Input';
 import { Send, X } from 'lucide-react';
+import { useToast } from '@/components/ui/toast/ToastProvider';
 
 export function ReminderModal({
   workshopId,
@@ -15,6 +16,7 @@ export function ReminderModal({
   workshopTitle: string;
   onClose: () => void;
 }) {
+  const toast = useToast();
   const [title, setTitle] = useState(`Reminder: ${workshopTitle}`);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -25,21 +27,29 @@ export function ReminderModal({
 
     setSending(true);
 
+    const { data: sessionData } = await supabase.auth.getSession();
+    const adminId = sessionData.session?.user.id;
+    if (!adminId) {
+      toast.error('You must be logged in as an admin to send reminders.');
+      setSending(false);
+      return;
+    }
+
     const { error } = await supabase.from('broadcasts').insert([
       {
+        admin_id: adminId,
         title,
         message,
         recipient_group: `workshop_${workshopId}`,
-        created_at: new Date().toISOString(),
       },
     ]);
 
     setSending(false);
 
     if (error) {
-      alert('Error sending reminder: ' + error.message);
+      toast.error('Error sending reminder: ' + error.message);
     } else {
-      alert('Reminder sent successfully!');
+      toast.success('Reminder sent successfully!');
       onClose();
     }
   };
@@ -73,6 +83,7 @@ export function ReminderModal({
           <h2 style={{ margin: 0, fontSize: '1.25rem' }}>Send Reminder</h2>
           <button
             onClick={onClose}
+            aria-label="Close"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--secondary-gray)' }}
           >
             <X size={20} />
@@ -89,10 +100,11 @@ export function ReminderModal({
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+            <label htmlFor="reminder-message" style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem', color: 'var(--secondary-black)' }}>
               Message Body
             </label>
             <textarea
+              id="reminder-message"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               required

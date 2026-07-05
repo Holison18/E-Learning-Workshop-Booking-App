@@ -2,7 +2,7 @@
   min-height: 100vh;
   display: grid;
   grid-template-columns: 250px 1fr;
-  background-color: #FAFAFA; /* Off-white background */
+  background-color: var(--background-off-white);
 }
 
 /* Sidebar Styles */
@@ -19,21 +19,13 @@
 .logo {
   padding: 1.5rem;
   display: flex;
-  flex-direction: column;
   text-decoration: none;
 }
 
-.logoTitle {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.125rem;
-  color: var(--primary-red);
-}
-
-.logoSubtitle {
-  font-size: 0.8125rem;
-  color: var(--secondary-gray);
-  margin-top: 0.25rem;
+.logoImage {
+  width: 100%;
+  height: auto;
+  max-width: 170px;
 }
 
 .navGroup {
@@ -52,6 +44,26 @@
   letter-spacing: 0.05em;
   padding: 0 1rem;
   margin-bottom: 0.5rem;
+}
+
+.viewSwitch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 1rem 1rem;
+  padding: 0.625rem 1rem;
+  border-radius: 8px;
+  border: 1px dashed var(--primary-red);
+  color: var(--primary-red);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.viewSwitch:hover {
+  background-color: var(--primary-red-light);
 }
 
 .navLink {
@@ -101,19 +113,7 @@
   gap: 0.75rem;
   padding: 0.75rem;
   border-radius: 8px;
-  background-color: #F3F4F6; /* subtle gray */
-}
-
-.avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  overflow: hidden;
-  background-color: var(--secondary-gray);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--background-white);
+  background-color: var(--surface-muted);
 }
 
 .profileInfo {
@@ -161,7 +161,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  background-color: #F3F4F6;
+  background-color: var(--surface-muted);
   padding: 0.5rem 1rem;
   border-radius: 20px;
   width: 100%;
@@ -189,30 +189,37 @@
 
 .actionIcon {
   color: var(--secondary-gray);
-  cursor: pointer;
   transition: color 0.2s;
 }
 
-.actionIcon:hover {
-  color: var(--secondary-black);
-}
-
-.topbarProfile {
-  display: flex;
+.notificationBell {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding-left: 1.5rem;
-  border-left: 1px solid var(--border-light);
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  flex-shrink: 0;
 }
 
-.topbarProfileName {
-  font-size: 0.875rem;
-  font-weight: 500;
+.notificationBell:hover {
+  background-color: var(--surface-muted);
+}
+
+.notificationBell:hover .actionIcon {
   color: var(--secondary-black);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 150px;
+}
+
+.notificationDot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary-red);
+  border: 2px solid var(--background-white);
 }
 
 .mainContent {
@@ -223,11 +230,83 @@
   margin: 0 auto;
 }
 
+.mobileMenuButton {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  color: var(--secondary-black);
+  flex-shrink: 0;
+}
+
+.mobileMenuButton:hover {
+  background-color: var(--surface-muted);
+}
+
+.mobileOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 40;
+}
+
+.mobileDrawer {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .layout {
     grid-template-columns: 1fr;
   }
   .sidebar {
     display: none;
+  }
+
+  .mobileMenuButton {
+    display: inline-flex;
+  }
+
+  .mobileDrawer {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 260px;
+    max-width: 80vw;
+    background-color: var(--background-white);
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease-out;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .mobileDrawerOpen {
+    transform: translateX(0);
+  }
+
+  .mobileDrawerClose {
+    position: absolute;
+    top: 1.25rem;
+    right: 1rem;
+    color: var(--secondary-gray);
+  }
+
+  .topbar {
+    padding: 0.75rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .mainContent {
+    padding: 1.25rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .searchBar {
+    max-width: none;
   }
 }

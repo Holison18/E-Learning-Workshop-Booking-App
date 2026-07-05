@@ -1,27 +1,36 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import styles from './DashboardLayout.module.css';
-import { 
-  LayoutDashboard, 
-  GraduationCap, 
-  CalendarDays, 
-  Calendar, 
-  Bell, 
-  User as UserIcon, 
-  Settings, 
+import {
+  LayoutDashboard,
+  GraduationCap,
+  CalendarDays,
+  Calendar,
+  Bell,
+  User as UserIcon,
+  Settings,
   LogOut,
-  Search
+  Menu,
+  X,
+  ArrowLeftRight
 } from 'lucide-react';
+import { PageLoader } from '@/components/ui/spinner/PageLoader';
+import { getFirstName } from '@/lib/user';
+import { TopbarSearch } from './TopbarSearch';
+import { NotificationBell } from './NotificationBell';
+import { Avatar } from '@/components/ui/avatar/Avatar';
 
 export default function DashboardLayout({ children, admin = false }: { children: React.ReactNode, admin?: boolean }) {
   const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -38,7 +47,7 @@ export default function DashboardLayout({ children, admin = false }: { children:
   };
 
   if (loading || !user || (admin && !isAdmin)) {
-    return <div className={styles.layout} style={{ justifyContent: 'center', alignItems: 'center' }}>Loading...</div>;
+    return <PageLoader fullScreen />;
   }
 
   const participantLinks = [
@@ -55,82 +64,115 @@ export default function DashboardLayout({ children, admin = false }: { children:
 
   const links = admin ? adminLinks : participantLinks;
 
-  // Derive the first name for the profile widget (assuming standard format or just user email prefix)
-  const firstName = user.user_metadata?.first_name || user.email?.split('@')[0] || 'User';
+  const firstName = getFirstName(user);
   const role = admin ? 'Administrator' : 'Student';
-  const initial = firstName.charAt(0).toUpperCase();
+
+  const renderSidebarContent = (onNavigate?: () => void) => (
+    <>
+      <Link href={admin ? "/admin/dashboard" : "/dashboard"} className={styles.logo} onClick={onNavigate}>
+        <Image
+          src="/images/logo/knust-elearning-logo.png"
+          alt="KNUST E-Learning Centre"
+          width={1161}
+          height={447}
+          className={styles.logoImage}
+          priority
+        />
+      </Link>
+
+      <nav className={styles.navGroup}>
+        {links.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
+            onClick={onNavigate}
+          >
+            {link.icon}
+            {link.label}
+          </Link>
+        ))}
+      </nav>
+
+      {isAdmin && (
+        <Link
+          href={admin ? '/dashboard' : '/admin/dashboard'}
+          className={styles.viewSwitch}
+          onClick={onNavigate}
+        >
+          <ArrowLeftRight size={16} />
+          {admin ? 'Switch to Member View' : 'Switch to Admin View'}
+        </Link>
+      )}
+
+      <div className={styles.navLabel}>{admin ? 'ACCOUNT' : 'USER ACCOUNT'}</div>
+      <nav className={styles.navGroup}>
+        {!admin && (
+          <Link href="/notifications" className={`${styles.navLink} ${pathname === '/notifications' ? styles.active : ''}`} onClick={onNavigate}>
+            <Bell size={18} /> Notifications
+          </Link>
+        )}
+        <Link href={admin ? '/admin/account' : '/account'} className={`${styles.navLink} ${pathname === (admin ? '/admin/account' : '/account') ? styles.active : ''}`} onClick={onNavigate}>
+          <UserIcon size={18} /> My Account
+        </Link>
+        {!admin && (
+          <Link href="/settings" className={`${styles.navLink} ${pathname === '/settings' ? styles.active : ''}`} onClick={onNavigate}>
+            <Settings size={18} /> Settings
+          </Link>
+        )}
+        <button onClick={handleLogout} className={styles.navLink} style={{ marginTop: '0.5rem' }}>
+          <LogOut size={18} /> Logout
+        </button>
+      </nav>
+
+      <div className={styles.profileWidget}>
+        <div className={styles.profileCard}>
+          <Avatar user={user} name={firstName} size={36} />
+          <div className={styles.profileInfo}>
+            <span className={styles.profileName}>{firstName}</span>
+            <span className={styles.profileRole}>{role}</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <div className={styles.layout}>
-      {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <Link href={admin ? "/admin/dashboard" : "/dashboard"} className={styles.logo}>
-          <span className={styles.logoTitle}>KNUST E-Learning</span>
-          <span className={styles.logoSubtitle}>Workshop Portal</span>
-        </Link>
+      {/* Sidebar (desktop) */}
+      <aside className={styles.sidebar}>{renderSidebarContent()}</aside>
 
-        <nav className={styles.navGroup}>
-          {links.map((link) => (
-            <Link 
-              key={link.href} 
-              href={link.href}
-              className={`${styles.navLink} ${pathname === link.href ? styles.active : ''}`}
-            >
-              {link.icon}
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-
-        <div className={styles.navLabel}>{admin ? 'ACCOUNT' : 'USER ACCOUNT'}</div>
-        <nav className={styles.navGroup}>
-          {!admin && (
-            <Link href="/notifications" className={styles.navLink}>
-              <Bell size={18} /> Notifications
-            </Link>
-          )}
-          <Link href={admin ? '/admin/account' : '/account'} className={styles.navLink}>
-            <UserIcon size={18} /> My Account
-          </Link>
-          {!admin && (
-            <Link href="/settings" className={styles.navLink}>
-              <Settings size={18} /> Settings
-            </Link>
-          )}
-          <button onClick={handleLogout} className={styles.navLink} style={{ marginTop: '0.5rem' }}>
-            <LogOut size={18} /> Logout
-          </button>
-        </nav>
-
-        <div className={styles.profileWidget}>
-          <div className={styles.profileCard}>
-            <div className={styles.avatar}>{initial}</div>
-            <div className={styles.profileInfo}>
-              <span className={styles.profileName}>{firstName}</span>
-              <span className={styles.profileRole}>{role}</span>
-            </div>
-          </div>
-        </div>
+      {/* Mobile nav drawer */}
+      {mobileNavOpen && (
+        <div className={styles.mobileOverlay} onClick={() => setMobileNavOpen(false)} aria-hidden="true" />
+      )}
+      <aside className={`${styles.mobileDrawer} ${mobileNavOpen ? styles.mobileDrawerOpen : ''}`}>
+        <button
+          className={styles.mobileDrawerClose}
+          onClick={() => setMobileNavOpen(false)}
+          aria-label="Close navigation menu"
+        >
+          <X size={20} />
+        </button>
+        {renderSidebarContent(() => setMobileNavOpen(false))}
       </aside>
 
       {/* Main Content Area */}
       <div className={styles.mainArea}>
         {/* Topbar */}
         <header className={styles.topbar}>
-          <div className={styles.searchBar}>
-            <Search size={18} className={styles.actionIcon} />
-            <input 
-              type="text" 
-              placeholder="Search workshops, speakers, topics..." 
-              className={styles.searchInput}
-            />
-          </div>
+          <button
+            className={styles.mobileMenuButton}
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Open navigation menu"
+          >
+            <Menu size={22} />
+          </button>
+          <Suspense fallback={<div className={styles.searchBar} />}>
+            <TopbarSearch admin={admin} />
+          </Suspense>
           <div className={styles.topbarActions}>
-            <Bell size={20} className={styles.actionIcon} />
-            <div className={styles.topbarProfile}>
-              <div className={styles.avatar} style={{ width: '28px', height: '28px', fontSize: '0.75rem' }}>{initial}</div>
-              <span className={styles.topbarProfileName}>{firstName}</span>
-            </div>
+            <NotificationBell user={user} admin={admin} />
           </div>
         </header>
 
