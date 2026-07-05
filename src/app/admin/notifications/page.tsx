@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Send, Clock, AlertTriangle, Headphones, Download } from 'lucide-react';
+import { Send, Clock, AlertTriangle, Headphones, Download, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
 import { PageLoader } from '@/components/ui/spinner/PageLoader';
 import { useToast } from '@/components/ui/toast/ToastProvider';
+import { getSystemNotifications, dismissNotification, getDismissedNotifications, type NotificationItem } from '@/lib/notifications';
+import { useAuth } from '@/contexts/AuthContext';
 import styles from './AdminNotifications.module.css';
 
 type Broadcast = {
@@ -37,7 +39,9 @@ const badgeVariant: Record<Broadcast['status'], 'success' | 'warning' | 'danger'
 
 export default function AdminNotifications() {
   const toast = useToast();
+  const { user } = useAuth();
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
+  const [systemNotifications, setSystemNotifications] = useState<NotificationItem[]>([]);
   const [participantCount, setParticipantCount] = useState(0);
   const [workshopOptions, setWorkshopOptions] = useState<WorkshopOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,14 +52,18 @@ export default function AdminNotifications() {
   const [formData, setFormData] = useState({ title: '', message: '', recipient_group: 'All Participants' });
 
   async function fetchData() {
-    const [broadcastsRes, participantsRes, workshopsRes] = await Promise.all([
+    if (!user) return;
+    const [broadcastsRes, participantsRes, workshopsRes, sysRes, dismissed] = await Promise.all([
       supabase.from('broadcasts').select('id, title, message, recipient_group, recipient_count, status, sent_at').order('sent_at', { ascending: false }),
       supabase.from('participants').select('id', { count: 'exact', head: true }),
       supabase.from('workshops').select('id, title, seats_booked').eq('status', 'published').order('date', { ascending: true }),
+      getSystemNotifications(user, true),
+      getDismissedNotifications(user)
     ]);
     if (broadcastsRes.data) setBroadcasts(broadcastsRes.data as Broadcast[]);
     setParticipantCount(participantsRes.count || 0);
     if (workshopsRes.data) setWorkshopOptions(workshopsRes.data as WorkshopOption[]);
+    setSystemNotifications(sysRes.filter(n => !dismissed.includes(n.id)));
     setLoading(false);
   }
 
@@ -104,6 +112,24 @@ export default function AdminNotifications() {
       fetchData();
     }
     setSending(false);
+  };
+
+  const handleDeleteBroadcast = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this broadcast? This will remove it for all participants.")) return;
+    
+    setBroadcasts((prev) => prev.filter((b) => b.id !== id));
+    const { error } = await supabase.from('broadcasts').delete().eq('id', id);
+    if (error) {
+      toast.error('Failed to delete broadcast: ' + error.message);
+      fetchData(); // revert
+    } else {
+      toast.success('Broadcast deleted globally.');
+    }
+  };
+
+  const handleDeleteSystemAlert = async (id: string) => {
+    setSystemNotifications((prev) => prev.filter((n) => n.id !== id));
+    await dismissNotification(user!, id);
   };
 
   const filtered = useMemo(
@@ -249,11 +275,12 @@ export default function AdminNotifications() {
                   <th>Recipients</th>
                   <th>Sent Date</th>
                   <th>Status</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {paginated.length === 0 && (
-                  <tr><td colSpan={4} className={styles.emptyState}>No announcements yet.</td></tr>
+                  <tr><td colSpan={5} className={styles.emptyState}>No announcements yet.</td></tr>
                 )}
                 {paginated.map((b) => (
                   <tr key={b.id}>
@@ -267,6 +294,11 @@ export default function AdminNotifications() {
                     </td>
                     <td>{new Date(b.sent_at).toLocaleString()}</td>
                     <td><Badge variant={badgeVariant[b.status]}>{b.status}</Badge></td>
+                    <td>
+                      <button onClick={() => handleDeleteBroadcast(b.id)} className={styles.deleteButton} title="Delete broadcast globally">
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -291,6 +323,45 @@ export default function AdminNotifications() {
               ))}
               <button className={styles.pageButton} disabled={currentPage === totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))} aria-label="Next page">›</button>
             </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card style={{ marginTop: '2.5rem' }}>
+        <CardContent>
+          <div className={styles.sectionHeader} style={{ marginBottom: '1rem' }}>
+            <h2 className={styles.sectionTitle}>System Alerts</h2>
+          </div>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Alert Details</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {systemNotifications.length === 0 && (
+                  <tr><td colSpan={2} className={styles.emptyState}>No system alerts at the moment.</td></tr>
+                )}
+                {systemNotifications.map((n) => (
+                  <tr key={n.id}>
+                    <td>
+                      <div className={styles.announcementTitle}>{n.title}</div>
+                      <div className={styles.announcementMessage}>{n.message}</div>
+                    </td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+                        {new Date(n.sent_at).toLocaleString()}
+                        <button onClick={() => handleDeleteSystemAlert(n.id)} className={styles.deleteButton} title="Dismiss alert">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>

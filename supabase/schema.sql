@@ -292,3 +292,23 @@ CREATE POLICY "Published workshops are public, drafts are admin-only" ON public.
 
 CREATE POLICY "Participants can cancel their own unchecked bookings" ON public.bookings
     FOR DELETE USING (auth.uid() = participant_id AND checked_in = false);
+
+-- =====================================================================
+-- Migration: Add dismissed_notifications table for tracking hidden alerts
+-- =====================================================================
+CREATE TABLE public.dismissed_notifications (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES auth.users(id) NOT NULL,
+    notification_id TEXT NOT NULL,
+    dismissed_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+    UNIQUE(user_id, notification_id)
+);
+
+ALTER TABLE public.dismissed_notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own dismissed notifications" ON public.dismissed_notifications
+    FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- Add missing DELETE policy for broadcasts so admins can delete them globally
+CREATE POLICY "Admins can delete broadcasts" ON public.broadcasts
+    FOR DELETE USING (public.is_admin(auth.uid()));

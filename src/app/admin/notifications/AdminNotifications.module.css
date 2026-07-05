@@ -213,6 +213,23 @@
   color: var(--background-white);
 }
 
+.deleteButton {
+  color: var(--secondary-gray);
+  opacity: 0.5;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+}
+
+.deleteButton:hover {
+  opacity: 1;
+  color: var(--primary-red);
+  background-color: var(--primary-red-light);
+}
+
 .emptyState {
   padding: 2.5rem;
   text-align: center;

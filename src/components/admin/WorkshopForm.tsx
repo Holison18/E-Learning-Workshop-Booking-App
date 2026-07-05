@@ -15,7 +15,6 @@ import styles from './WorkshopForm.module.css';
 const CATEGORIES = ['AI & Machine Learning', 'Sustainability', 'Cybersecurity', 'Academic Writing', 'Data Science', 'General'];
 const CAPACITY_GAUGE_MAX = 500;
 // Workshops can be scheduled for today or any day after - never locked to a fixed event window.
-const MIN_WORKSHOP_DATE = new Date().toISOString().slice(0, 10);
 
 type FormState = {
   title: string;
@@ -52,6 +51,11 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [minDate, setMinDate] = useState('');
+
+  useEffect(() => {
+    setMinDate(new Date().toISOString().slice(0, 10));
+  }, []);
 
   useEffect(() => {
     if (mode !== 'edit' || !workshopId) return;
@@ -232,7 +236,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                     label="Workshop Date"
                     name="date"
                     type="date"
-                    min={mode === 'create' ? MIN_WORKSHOP_DATE : undefined}
+                    min={mode === 'create' ? minDate : undefined}
                     value={formData.date}
                     onChange={handleChange}
                     required

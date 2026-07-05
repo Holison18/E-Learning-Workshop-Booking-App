@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
-import { ArrowLeft, Mail, Pencil, Users, CheckCircle, Armchair } from 'lucide-react';
+import { ArrowLeft, Mail, Pencil, Users, CheckCircle, Armchair, Download } from 'lucide-react';
 import { ReminderModal } from '@/components/admin/ReminderModal';
 import { PageLoader } from '@/components/ui/spinner/PageLoader';
 import { subscribeToWorkshopUpdates } from '@/lib/realtime';
@@ -19,6 +19,7 @@ type Participant = {
   last_name: string;
   email: string;
   organization_name: string;
+  phone: string;
 };
 
 type Booking = {
@@ -61,7 +62,8 @@ export default function WorkshopDetailsPage() {
             first_name,
             last_name,
             email,
-            organization_name
+            organization_name,
+            phone
           )
         `).eq('workshop_id', id)
       ]);
@@ -93,6 +95,31 @@ export default function WorkshopDetailsPage() {
   }
 
   const checkedInCount = bookings.filter(b => b.checked_in).length;
+
+  const handleDownloadCSV = () => {
+    if (bookings.length === 0) return;
+    const headers = ['First Name', 'Last Name', 'Email', 'Contact Number', 'Registered On', 'Attendance'];
+    const csvContent = [
+      headers.join(','),
+      ...bookings.map(b => [
+        `"${b.participants?.first_name || ''}"`,
+        `"${b.participants?.last_name || ''}"`,
+        `"${b.participants?.email || ''}"`,
+        `"${b.participants?.phone || ''}"`,
+        `"${new Date(b.booked_at).toLocaleDateString()}"`,
+        `"${b.checked_in ? 'Attended' : 'Pending'}"`
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `workshop_${workshop.title.replace(/\s+/g, '_')}_participants.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
@@ -158,15 +185,18 @@ export default function WorkshopDetailsPage() {
 
       <Card>
         <CardContent style={{ padding: 0 }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)' }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ margin: 0, fontSize: '1.125rem' }}>Participant Roster</h2>
+            <Button variant="outline" size="sm" onClick={handleDownloadCSV} icon={<Download size={16} />}>
+              Download CSV
+            </Button>
           </div>
           <div style={{ overflowX: 'auto' }}>
             <table className={styles.table}>
               <thead>
                 <tr>
                   <th>Participant</th>
-                  <th>Organization</th>
+                  <th>Contact</th>
                   <th>Registered On</th>
                   <th>Attendance</th>
                 </tr>
@@ -185,7 +215,7 @@ export default function WorkshopDetailsPage() {
                           {booking.participants?.email}
                         </div>
                       </td>
-                      <td>{booking.participants?.organization_name || '—'}</td>
+                      <td>{booking.participants?.phone || '—'}</td>
                       <td>{new Date(booking.booked_at).toLocaleDateString()}</td>
                       <td>
                         {booking.checked_in ? (

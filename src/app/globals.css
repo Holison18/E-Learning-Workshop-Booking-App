@@ -121,3 +121,30 @@ input:focus, select:focus, textarea:focus {
 .animate-spin {
   animation: spin 1s linear infinite;
 }
+
+@media print {
+  header, aside {
+    display: none !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    background-color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Make grid print better */
+  * {
+    page-break-inside: auto;
+  }
+}

@@ -71,6 +71,8 @@
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.5rem;
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .cardBody {

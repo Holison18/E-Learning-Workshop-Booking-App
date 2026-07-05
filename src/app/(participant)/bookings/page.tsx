@@ -146,7 +146,7 @@ export default function MyBookings() {
           </div>
         </CardContent>
 
-        <div className={styles.footer}>
+        <div className={`${styles.footer} no-print`}>
           {!booking.checked_in ? (
             <Button
               variant="ghost"
@@ -166,7 +166,7 @@ export default function MyBookings() {
 
   return (
     <div>
-      <div className={styles.header}>
+      <div className={`${styles.header} no-print`}>
         <div className={styles.headerRow}>
           <div>
             <h1>My Bookings</h1>
@@ -199,7 +199,7 @@ export default function MyBookings() {
         <>
           {upcoming.length > 0 && (
             <section className={styles.section}>
-              <h2 className={styles.sectionHeading}>
+              <h2 className={`${styles.sectionHeading} no-print`}>
                 Upcoming <span className={styles.sectionCount}>({upcoming.length})</span>
               </h2>
               <div className={styles.grid}>
@@ -210,7 +210,7 @@ export default function MyBookings() {
 
           {past.length > 0 && (
             <section className={styles.section}>
-              <h2 className={styles.sectionHeading}>
+              <h2 className={`${styles.sectionHeading} no-print`}>
                 Past <span className={styles.sectionCount}>({past.length})</span>
               </h2>
               <div className={styles.grid}>

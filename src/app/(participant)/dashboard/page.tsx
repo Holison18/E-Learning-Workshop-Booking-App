@@ -15,6 +15,7 @@ import { PageLoader } from '@/components/ui/spinner/PageLoader';
 import { useToast } from '@/components/ui/toast/ToastProvider';
 import { getFirstLastName } from '@/lib/user';
 import { subscribeToWorkshopUpdates } from '@/lib/realtime';
+import { ProfilePromptModal } from '@/components/participant/ProfilePromptModal';
 
 type Workshop = {
   id: string;
@@ -56,6 +57,7 @@ function ParticipantDashboard() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [stagedBookings, setStagedBookings] = useState<Set<Workshop>>(new Set());
   const [isConfirming, setIsConfirming] = useState(false);
+  const [showProfilePrompt, setShowProfilePrompt] = useState(false);
 
   useEffect(() => {
     // Live seat counts: reflect other participants' bookings/cancellations
@@ -148,37 +150,10 @@ function ParticipantDashboard() {
     }
   };
 
-  const handleConfirmBookings = async () => {
-    if (!user || stagedBookings.size === 0) return;
+  const executeBookings = async () => {
     setIsConfirming(true);
-
-    // Self-healing check: Ensure the user's participant profile exists
-    // (This is necessary if profile creation failed silently on registration due to missing RLS policies)
-    const { data: participantData } = await supabase
-      .from('participants')
-      .select('id')
-      .eq('id', user.id)
-      .single();
-
-    if (!participantData) {
-      const { firstName: fallbackFirstName, lastName: fallbackLastName } = getFirstLastName(user);
-      const { error: profileError } = await supabase.from('participants').insert([{
-        id: user.id,
-        first_name: fallbackFirstName,
-        last_name: fallbackLastName || 'Unknown',
-        email: user.email || '',
-        phone: user.user_metadata?.phone || 'Not provided',
-      }]);
-      
-      if (profileError) {
-        toast.error("Your profile is incomplete and could not be auto-created due to database permissions. Please add the INSERT policy to your Supabase SQL editor. Error: " + profileError.message);
-        setIsConfirming(false);
-        return;
-      }
-    }
-
     const inserts = Array.from(stagedBookings).map(w => ({
-      participant_id: user.id,
+      participant_id: user!.id,
       workshop_id: w.id
     }));
 
@@ -206,6 +181,30 @@ function ParticipantDashboard() {
       setIsConfirming(false);
       toast.success("Successfully booked " + newlyBookedIds.length + " sessions!");
     }
+  };
+
+  const handleConfirmBookings = async () => {
+    if (!user || stagedBookings.size === 0) return;
+    setIsConfirming(true);
+
+    const { data: participantData } = await supabase
+      .from('participants')
+      .select('id, first_name, last_name, phone')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isProfileIncomplete = !participantData || 
+      !participantData.first_name || participantData.first_name === 'Unknown' ||
+      !participantData.last_name || participantData.last_name === 'Unknown' ||
+      !participantData.phone || participantData.phone === 'Not provided';
+
+    if (isProfileIncomplete) {
+      setShowProfilePrompt(true);
+      setIsConfirming(false);
+      return;
+    }
+
+    await executeBookings();
   };
 
   if (loading) {
@@ -515,6 +514,22 @@ function ParticipantDashboard() {
           </div>
         </div>,
         document.body
+      )}
+
+      {showProfilePrompt && user && (
+        <ProfilePromptModal
+          userId={user.id}
+          email={user.email || ''}
+          initialFirstName={getFirstLastName(user).firstName}
+          initialLastName={getFirstLastName(user).lastName || 'Unknown'}
+          onSuccess={() => {
+            setShowProfilePrompt(false);
+            executeBookings();
+          }}
+          onCancel={() => {
+            setShowProfilePrompt(false);
+          }}
+        />
       )}
     </div>
   );
