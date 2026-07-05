@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
+import { GoogleIcon } from '@/components/ui/icons/GoogleIcon';
 import styles from '../AuthForm.module.css';
 
 export default function RegisterPage() {
@@ -19,6 +20,7 @@ export default function RegisterPage() {
     password: ''
   });
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,6 +79,23 @@ export default function RegisterPage() {
         // Email confirmation is required before a session is created
         router.push(`/auth/confirm-email?email=${encodeURIComponent(formData.email)}`);
       }
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setGoogleLoading(true);
+    setError('');
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+      setGoogleLoading(false);
     }
   };
 
@@ -148,6 +167,13 @@ export default function RegisterPage() {
           {loading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
         </Button>
       </form>
+
+      <div className={styles.divider}>Or</div>
+
+      <button type="button" className={styles.googleButton} onClick={handleGoogleSignUp} disabled={googleLoading}>
+        <GoogleIcon size={18} />
+        {googleLoading ? 'Connecting...' : 'Sign up with Google'}
+      </button>
 
       <div className={styles.stack}>
         <Link href="/auth/login" style={{ width: '100%' }}>
