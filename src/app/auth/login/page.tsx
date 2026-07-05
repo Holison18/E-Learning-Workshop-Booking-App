@@ -3,9 +3,8 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { requestApi } from '@/lib/api';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
 import { GoogleIcon } from '@/components/ui/icons/GoogleIcon';
@@ -35,10 +34,7 @@ export default function LoginPage() {
       return;
     }
 
-    const adminsResponse = await requestApi<{ data: { id: string }[] }>('/api/admin/admin');
-    const isAdmin = adminsResponse.data.some((admin) => admin.id === data.user.id);
-
-    router.push(isAdmin ? '/admin/dashboard' : '/dashboard');
+    router.push('/dashboard');
     router.refresh();
   };
 
@@ -63,7 +59,20 @@ export default function LoginPage() {
     <div>
       <h1 className={styles.heading}>Sign in</h1>
 
-      {error && <div className={styles.error}>{error}</div>}
+      {error && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.625rem',
+          padding: '0.75rem 1rem',
+          background: '#FEF2F2', borderRadius: '10px',
+          border: '1px solid #FECACA',
+          color: '#991B1B',
+          fontSize: '0.875rem', fontWeight: 500,
+          marginBottom: '1rem',
+        }}>
+          <AlertCircle size={18} style={{ flexShrink: 0 }} />
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleLogin} className={styles.form}>
         <Input
