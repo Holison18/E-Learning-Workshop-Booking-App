@@ -2,15 +2,17 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card/Card';
+import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
-import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle2, XCircle, Loader2, CalendarDays, Clock, MapPin } from 'lucide-react';
 import { useParams } from 'next/navigation';
+import { useToast } from '@/components/ui/toast/ToastProvider';
 
 export default function VerifyBookingPage() {
   const params = useParams();
   const bookingId = params.booking_id as string;
-  
+  const toast = useToast();
+
   const [booking, setBooking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -58,7 +60,7 @@ export default function VerifyBookingPage() {
       .eq('id', bookingId);
 
     if (error) {
-      alert("Failed to check in: " + error.message);
+      toast.error("Failed to check in: " + error.message);
       setUpdating(false);
     } else {
       setBooking((prev: any) => ({ ...prev, checked_in: true }));
@@ -88,7 +90,9 @@ export default function VerifyBookingPage() {
     );
   }
 
-  const isToday = new Date(booking.workshops.date).toDateString() === new Date().toDateString();
+  const isToday = booking.workshops?.date
+    ? new Date(booking.workshops.date).toDateString() === new Date().toDateString()
+    : false;
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--background-off-white)', padding: '1rem' }}>
@@ -125,10 +129,16 @@ export default function VerifyBookingPage() {
           <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: '1.5rem' }}>
             <p style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workshop Details</p>
             <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem' }}>{booking.workshops?.title}</h3>
-            <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-              <span>📅 {new Date(booking.workshops?.date).toLocaleDateString()} {isToday && <strong style={{ color: 'var(--success-green)' }}>(Today)</strong>}</span>
-              <span>⏰ {booking.workshops?.start_time.slice(0, 5)} - {booking.workshops?.end_time.slice(0, 5)}</span>
-              <span>📍 {booking.workshops?.location}</span>
+            <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <CalendarDays size={14} aria-hidden="true" /> {booking.workshops?.date ? new Date(booking.workshops.date).toLocaleDateString() : '—'} {isToday && <strong style={{ color: 'var(--success-green)' }}>(Today)</strong>}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Clock size={14} aria-hidden="true" /> {booking.workshops?.start_time?.slice(0, 5)} - {booking.workshops?.end_time?.slice(0, 5)}
+              </span>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <MapPin size={14} aria-hidden="true" /> {booking.workshops?.location}
+              </span>
             </div>
           </div>
           

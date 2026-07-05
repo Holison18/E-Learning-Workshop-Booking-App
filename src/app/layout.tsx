@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/components/ui/toast/ToastProvider";
+import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog/ConfirmDialogProvider";
 
 const inter = Inter({
   variable: "--font-body",
@@ -26,9 +28,13 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${outfit.variable}`}>
       <body suppressHydrationWarning>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ToastProvider>
+          <ConfirmDialogProvider>
+            <AuthProvider>
+              {children}
+            </AuthProvider>
+          </ConfirmDialogProvider>
+        </ToastProvider>
       </body>
     </html>
   );

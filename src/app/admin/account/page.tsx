@@ -8,6 +8,9 @@ import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
+import { PageLoader } from '@/components/ui/spinner/PageLoader';
+import { useConfirm } from '@/components/ui/confirm-dialog/ConfirmDialogProvider';
+import { Avatar } from '@/components/ui/avatar/Avatar';
 import styles from './AdminAccount.module.css';
 
 type AdminRow = {
@@ -26,6 +29,7 @@ const roleLabel: Record<AdminRow['role'], string> = {
 
 export default function AdminAccountPage() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const [admins, setAdmins] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -55,12 +59,6 @@ export default function AdminAccountPage() {
     : user?.email?.split('@')[0] || 'Admin';
   const displayEmail = currentAdmin?.email || user?.email || '';
   const displayRole = currentAdmin ? roleLabel[currentAdmin.role] : 'Administrator';
-  const initials = displayName
-    .split(' ')
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,12 +129,18 @@ export default function AdminAccountPage() {
   };
 
   const handleRemove = async (id: string) => {
-    if (!confirm('Remove this administrator? They will lose admin access.')) return;
+    const confirmed = await confirm({
+      title: 'Remove administrator?',
+      message: 'They will lose admin access immediately.',
+      confirmLabel: 'Remove',
+      danger: true,
+    });
+    if (!confirmed) return;
     const { error } = await supabase.from('admins').delete().eq('id', id);
     if (!error) fetchAdmins();
   };
 
-  if (loading) return <div className={styles.emptyState}>Loading account...</div>;
+  if (loading) return <PageLoader label="Loading account..." />;
 
   return (
     <div className={styles.page}>
@@ -148,7 +152,7 @@ export default function AdminAccountPage() {
       <div className={styles.layout}>
         <Card>
           <CardContent className={styles.profileCard}>
-            <div className={styles.avatar}>{initials || '?'}</div>
+            <Avatar user={user} name={displayName} size={84} className={styles.profileAvatar} />
             <div className={styles.profileName}>{displayName}</div>
             <div className={styles.profileRole}>{displayRole} · KNUST E-Learning Portal</div>
 
@@ -223,6 +227,7 @@ export default function AdminAccountPage() {
                 className={styles.roleSelect}
                 value={inviteForm.role}
                 onChange={(e) => setInviteForm({ ...inviteForm, role: e.target.value as AdminRow['role'] })}
+                aria-label="Role for new administrator"
               >
                 <option value="coordinator">Coordinator</option>
                 <option value="super_admin">Super Administrator</option>
@@ -250,14 +255,21 @@ export default function AdminAccountPage() {
                   {admins.length === 0 && (
                     <tr><td colSpan={4} className={styles.emptyState}>No administrators yet.</td></tr>
                   )}
-                  {admins.map((a) => (
+                  {admins.map((a) => {
+                    const adminName = a.first_name ? `${a.first_name} ${a.last_name || ''}` : 'Unknown';
+                    return (
                     <tr key={a.id}>
                       <td>
-                        <div className={styles.adminName}>
-                          {a.first_name ? `${a.first_name} ${a.last_name || ''}` : 'Unknown'}
-                          {a.id === user?.id && ' (you)'}
+                        <div className={styles.adminRow}>
+                          <Avatar user={{ id: a.id }} name={adminName} size={32} />
+                          <div>
+                            <div className={styles.adminName}>
+                              {adminName}
+                              {a.id === user?.id && ' (you)'}
+                            </div>
+                            <div className={styles.adminEmail}>{a.email || '—'}</div>
+                          </div>
                         </div>
-                        <div className={styles.adminEmail}>{a.email || '—'}</div>
                       </td>
                       <td><Badge variant={a.role === 'super_admin' ? 'primary' : 'info'}>{roleLabel[a.role]}</Badge></td>
                       <td><Badge variant={a.status === 'active' ? 'success' : 'warning'}>{a.status}</Badge></td>
@@ -280,7 +292,8 @@ export default function AdminAccountPage() {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

@@ -3,8 +3,16 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card/Card';
+import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
+import { Badge } from '@/components/ui/badge/Badge';
+import { PageLoader } from '@/components/ui/spinner/PageLoader';
+import { useToast } from '@/components/ui/toast/ToastProvider';
+import { useConfirm } from '@/components/ui/confirm-dialog/ConfirmDialogProvider';
+import { AddToCalendar } from '@/components/ui/add-to-calendar/AddToCalendar';
+import { CalendarDays, Clock, MapPin, CheckCircle2, XCircle, Ticket, CalendarCheck } from 'lucide-react';
+import { buildEventDescription, type CalendarEvent } from '@/lib/calendar';
+import styles from './Bookings.module.css';
 
 // Using QuickChart API for reliable QR code generation
 const generateQRUrl = (data: string) => {
@@ -16,90 +24,201 @@ type Booking = {
   checked_in: boolean;
   workshops: {
     title: string;
+    description: string | null;
     date: string;
     start_time: string;
+    end_time: string;
     location: string;
+    category: string | null;
+    facilitator: string | null;
   };
 };
 
 export default function MyBookings() {
   const { user } = useAuth();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchBookings() {
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('bookings')
         .select(`
           id,
           checked_in,
           workshops (
             title,
+            description,
             date,
             start_time,
-            location
+            end_time,
+            location,
+            category,
+            facilitator
           )
         `)
         .eq('participant_id', user.id);
 
       if (data) {
-        // @ts-ignore - Supabase types can be tricky with joins
-        setBookings(data as Booking[]);
+        setBookings(data as unknown as Booking[]);
       }
       setLoading(false);
     }
     fetchBookings();
   }, [user]);
 
-  if (loading) return <div>Loading your bookings...</div>;
+  const handleCancel = async (booking: Booking) => {
+    const confirmed = await confirm({
+      title: 'Cancel this booking?',
+      message: `You'll give up your seat in "${booking.workshops?.title}". This can't be undone, but you can rebook later if seats are still available.`,
+      confirmLabel: 'Cancel booking',
+      danger: true,
+    });
+    if (!confirmed) return;
+
+    setCancellingId(booking.id);
+    // .select() after delete() so we get back the rows actually removed - if
+    // this comes back empty with no error, RLS silently blocked the delete
+    // (e.g. the "participants can cancel their own unchecked bookings" policy
+    // isn't applied yet) and we must not pretend it worked.
+    const { data, error } = await supabase.from('bookings').delete().eq('id', booking.id).select();
+    setCancellingId(null);
+
+    if (error) {
+      toast.error('Failed to cancel booking: ' + error.message);
+    } else if (!data || data.length === 0) {
+      toast.error("Couldn't cancel this booking - you may not have permission to. Please contact support.");
+    } else {
+      setBookings((prev) => prev.filter((b) => b.id !== booking.id));
+      toast.success('Booking cancelled.');
+    }
+  };
+
+  if (loading) return <PageLoader label="Loading your bookings..." />;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const upcoming = bookings.filter((b) => b.workshops && new Date(b.workshops.date) >= today);
+  const past = bookings.filter((b) => b.workshops && new Date(b.workshops.date) < today);
+  const checkedInCount = bookings.filter((b) => b.checked_in).length;
+
+  const renderCard = (booking: Booking) => {
+    const verificationUrl = `${window.location.origin}/verify/${booking.id}`;
+    const qrUrl = generateQRUrl(verificationUrl);
+    const calendarEvent: CalendarEvent = {
+      uid: booking.id,
+      title: booking.workshops?.title,
+      location: booking.workshops?.location,
+      description: buildEventDescription(booking.workshops || {}),
+      date: booking.workshops?.date,
+      startTime: booking.workshops?.start_time,
+      endTime: booking.workshops?.end_time,
+    };
+
+    return (
+      <Card key={booking.id} className={`animate-fade-in ${styles.card}`}>
+        <CardContent className={styles.cardBody} style={{ padding: 0 }}>
+          <img src={qrUrl} alt="Check-in QR Code" className={styles.qr} />
+          <div className={styles.details}>
+            {booking.workshops?.category && <span className={styles.category}>{booking.workshops.category.toUpperCase()}</span>}
+            <h3 className={styles.title}>{booking.workshops?.title}</h3>
+            <div className={styles.meta}>
+              <span className={styles.metaItem}>
+                <CalendarDays size={14} aria-hidden="true" /> {booking.workshops?.date ? new Date(booking.workshops.date).toLocaleDateString() : '—'}
+              </span>
+              <span className={styles.metaItem}>
+                <Clock size={14} aria-hidden="true" /> {booking.workshops?.start_time?.slice(0, 5)}
+              </span>
+              <span className={styles.metaItem}>
+                <MapPin size={14} aria-hidden="true" /> {booking.workshops?.location}
+              </span>
+            </div>
+            {booking.checked_in && (
+              <Badge variant="success" className={styles.checkedInBadge}>
+                <CheckCircle2 size={13} aria-hidden="true" /> Checked In
+              </Badge>
+            )}
+          </div>
+        </CardContent>
+
+        <div className={styles.footer}>
+          {!booking.checked_in ? (
+            <Button
+              variant="ghost"
+              onClick={() => handleCancel(booking)}
+              disabled={cancellingId === booking.id}
+              className={styles.cancelButton}
+            >
+              <XCircle size={16} />
+              {cancellingId === booking.id ? 'Cancelling...' : 'Cancel booking'}
+            </Button>
+          ) : <span />}
+          <AddToCalendar event={calendarEvent} />
+        </div>
+      </Card>
+    );
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1>My Bookings</h1>
-          <p style={{ color: 'var(--secondary-gray)' }}>View your schedule and generate your check-in QR codes.</p>
+    <div>
+      <div className={styles.header}>
+        <div className={styles.headerRow}>
+          <div>
+            <h1>My Bookings</h1>
+            <p className={styles.subtitle}>View your schedule and generate your check-in QR codes.</p>
+          </div>
+          <Button variant="outline" onClick={() => window.print()}>Print Schedule</Button>
         </div>
-        <Button variant="outline" onClick={() => window.print()}>Print Schedule</Button>
+
+        {bookings.length > 0 && (
+          <div className={styles.summaryRow}>
+            <div className={styles.summaryChip}>
+              <Ticket size={16} aria-hidden="true" />
+              <span><strong>{bookings.length}</strong> total {bookings.length === 1 ? 'booking' : 'bookings'}</span>
+            </div>
+            <div className={styles.summaryChip}>
+              <CalendarCheck size={16} aria-hidden="true" />
+              <span><strong>{checkedInCount}</strong> checked in</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {bookings.length === 0 ? (
         <Card>
-          <CardContent style={{ padding: '3rem', textAlign: 'center' }}>
-            <p style={{ color: 'var(--secondary-gray)' }}>You haven't booked any workshops yet.</p>
+          <CardContent className={styles.emptyState}>
+            <p>You haven&apos;t booked any workshops yet.</p>
           </CardContent>
         </Card>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
-          {bookings.map((booking) => {
-            const verificationUrl = `${window.location.origin}/verify/${booking.id}`;
-            const qrUrl = generateQRUrl(verificationUrl);
+        <>
+          {upcoming.length > 0 && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionHeading}>
+                Upcoming <span className={styles.sectionCount}>({upcoming.length})</span>
+              </h2>
+              <div className={styles.grid}>
+                {upcoming.map(renderCard)}
+              </div>
+            </section>
+          )}
 
-            return (
-              <Card key={booking.id} className="animate-fade-in">
-                <CardContent style={{ display: 'flex', gap: '1.5rem', padding: '1.5rem', alignItems: 'center' }}>
-                  <img src={qrUrl} alt="Check-in QR Code" style={{ width: '120px', height: '120px', borderRadius: '8px', border: '1px solid var(--border-light)' }} />
-                  <div>
-                    <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1.125rem' }}>{booking.workshops.title}</h3>
-                    <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                      <span>📅 {new Date(booking.workshops.date).toLocaleDateString()}</span>
-                      <span>⏰ {booking.workshops.start_time.slice(0, 5)}</span>
-                      <span>📍 {booking.workshops.location}</span>
-                    </div>
-                    {booking.checked_in && (
-                      <div style={{ marginTop: '0.75rem', color: 'var(--success-green)', fontSize: '0.875rem', fontWeight: 600 }}>
-                        ✓ Checked In
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+          {past.length > 0 && (
+            <section className={styles.section}>
+              <h2 className={styles.sectionHeading}>
+                Past <span className={styles.sectionCount}>({past.length})</span>
+              </h2>
+              <div className={styles.grid}>
+                {past.map(renderCard)}
+              </div>
+            </section>
+          )}
+        </>
       )}
     </div>
   );

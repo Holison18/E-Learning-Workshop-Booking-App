@@ -250,3 +250,45 @@ CREATE POLICY "Admins can delete workshop banners" ON storage.objects
 
 -- Add missing INSERT policy for participants
 CREATE POLICY "Participants can insert their own profile" ON public.participants FOR INSERT WITH CHECK (auth.uid() = id);
+
+-- =====================================================================
+-- Migration: Enable Realtime on workshops
+--
+-- The dashboard subscribes to postgres_changes on public.workshops so
+-- every connected participant sees seat counts update live the moment
+-- anyone books or cancels, instead of only after a page reload. This
+-- requires the table to be added to Supabase's realtime publication.
+--
+-- Run this against the Supabase SQL editor (or `supabase db push`).
+-- =====================================================================
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.workshops;
+
+-- =====================================================================
+-- Migration: Hide draft workshops from participants at the RLS layer
+--
+-- The participant dashboard only queries status = 'published', but the
+-- old "Anyone can view workshops" policy let any authenticated client
+-- read draft rows directly via the REST API too. Replace it so drafts
+-- are only visible to admins, regardless of how the row is queried.
+--
+-- Run this against the Supabase SQL editor (or `supabase db push`).
+-- =====================================================================
+
+DROP POLICY IF EXISTS "Anyone can view workshops" ON public.workshops;
+CREATE POLICY "Published workshops are public, drafts are admin-only" ON public.workshops
+    FOR SELECT USING (status = 'published' OR public.is_admin(auth.uid()));
+
+-- =====================================================================
+-- Migration: Allow participants to cancel their own unchecked bookings
+--
+-- There was no DELETE policy for participants at all, so cancelling a
+-- booking was impossible even from a trusted client. Only allow it while
+-- checked_in is still false - once someone has checked in, the booking
+-- is a real attendance record and shouldn't disappear.
+--
+-- Run this against the Supabase SQL editor (or `supabase db push`).
+-- =====================================================================
+
+CREATE POLICY "Participants can cancel their own unchecked bookings" ON public.bookings
+    FOR DELETE USING (auth.uid() = participant_id AND checked_in = false);

@@ -2,12 +2,14 @@
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
-import { ArrowLeft, Mail, Users, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Pencil, Users, CheckCircle, Armchair } from 'lucide-react';
 import { ReminderModal } from '@/components/admin/ReminderModal';
+import { PageLoader } from '@/components/ui/spinner/PageLoader';
+import { subscribeToWorkshopUpdates } from '@/lib/realtime';
 import Link from 'next/link';
 import styles from './WorkshopDetails.module.css';
 
@@ -22,7 +24,7 @@ type Participant = {
 type Booking = {
   id: string;
   checked_in: boolean;
-  created_at: string;
+  booked_at: string;
   participants: Participant;
 };
 
@@ -53,7 +55,7 @@ export default function WorkshopDetailsPage() {
         supabase.from('bookings').select(`
           id,
           checked_in,
-          created_at,
+          booked_at,
           participants (
             id,
             first_name,
@@ -66,16 +68,24 @@ export default function WorkshopDetailsPage() {
 
       if (workshopRes.data) setWorkshop(workshopRes.data);
       if (bookingsRes.data) {
-        // @ts-ignore
-        setBookings(bookingsRes.data as Booking[]);
+        setBookings(bookingsRes.data as unknown as Booking[]);
       }
       setLoading(false);
     }
     fetchData();
   }, [id]);
 
+  useEffect(() => {
+    if (!id) return;
+    return subscribeToWorkshopUpdates((updated) => {
+      if (updated.id === id) {
+        setWorkshop((prev) => (prev ? { ...prev, ...updated } : prev));
+      }
+    });
+  }, [id]);
+
   if (loading) {
-    return <div style={{ padding: '2rem', textAlign: 'center' }}>Loading workshop details...</div>;
+    return <PageLoader label="Loading workshop details..." />;
   }
 
   if (!workshop) {
@@ -98,6 +108,11 @@ export default function WorkshopDetailsPage() {
             {new Date(workshop.date).toLocaleDateString()} | {workshop.start_time.slice(0, 5)}
           </p>
         </div>
+        <Link href={`/admin/workshops/${workshop.id}/edit`}>
+          <Button variant="outline" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Pencil size={16} /> Edit
+          </Button>
+        </Link>
         <Button onClick={() => setShowReminder(true)} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Mail size={16} /> Send Reminder
         </Button>
@@ -111,7 +126,7 @@ export default function WorkshopDetailsPage() {
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)' }}>Registered</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{bookings.length} / {workshop.capacity}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{workshop.seats_booked} / {workshop.capacity}</div>
             </div>
           </CardContent>
         </Card>
@@ -123,7 +138,19 @@ export default function WorkshopDetailsPage() {
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)' }}>Checked In</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{checkedInCount}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{checkedInCount} / {workshop.seats_booked}</div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ backgroundColor: 'var(--background-off-white)', padding: '1rem', borderRadius: '50%' }}>
+              <Armchair size={24} color="var(--secondary-gray)" />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)' }}>Seats Remaining</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{Math.max(workshop.capacity - workshop.seats_booked, 0)}</div>
             </div>
           </CardContent>
         </Card>
@@ -151,15 +178,15 @@ export default function WorkshopDetailsPage() {
                   bookings.map((booking) => (
                     <tr key={booking.id}>
                       <td>
-                        <div style={{ fontWeight: 500, color: 'var(--text-main)' }}>
+                        <div style={{ fontWeight: 500, color: 'var(--secondary-black)' }}>
                           {booking.participants?.first_name} {booking.participants?.last_name}
                         </div>
                         <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)' }}>
                           {booking.participants?.email}
                         </div>
                       </td>
-                      <td>{booking.participants?.organization_name || 'N/A'}</td>
-                      <td>{new Date(booking.created_at).toLocaleDateString()}</td>
+                      <td>{booking.participants?.organization_name || '—'}</td>
+                      <td>{new Date(booking.booked_at).toLocaleDateString()}</td>
                       <td>
                         {booking.checked_in ? (
                           <Badge variant="success">Attended</Badge>

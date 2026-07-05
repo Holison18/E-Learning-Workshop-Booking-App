@@ -1,0 +1,91 @@
+.header {
+  margin-bottom: 2rem;
+}
+
+.subtitle {
+  color: var(--secondary-gray);
+  margin-top: 0.25rem;
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  color: var(--secondary-gray);
+  gap: 0.5rem;
+}
+
+.emptyIcon {
+  color: var(--border-light);
+  margin-bottom: 0.5rem;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.item {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.25rem 1.5rem;
+}
+
+.itemIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background-color: var(--primary-red-light);
+  color: var(--primary-red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.itemBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.itemTitle {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.itemDate {
+  font-size: 0.75rem;
+  color: var(--secondary-gray);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.itemMessage {
+  color: var(--secondary-gray);
+  font-size: 0.875rem;
+  margin-top: 0.375rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .item {
+    padding: 1rem;
+  }
+
+  .itemHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+  }
+}

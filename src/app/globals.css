@@ -3,18 +3,22 @@
   --primary-red: #A32020;
   --primary-red-hover: #8B1B1B;
   --primary-red-light: #FBEBEB;
+  --primary-red-light-hover: #F5DCDC;
   
   --secondary-black: #1A1A1A;
   --secondary-gray: #4A4A4A;
   --background-white: #FFFFFF;
   --background-off-white: #F8F9FA;
-  
+  --surface-muted: #F3F4F6;
+
   /* Status Colors */
   --success-green: #2E7D32;
   --success-green-bg: #E8F5E9;
   --warning-orange: #ED6C02;
   --warning-orange-bg: #FFF3E0;
-  
+  --info-blue: #1565C0;
+  --info-blue-bg: #E3F2FD;
+
   /* Borders & Shadows */
   --border-light: #E0E0E0;
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
@@ -43,9 +47,21 @@ body {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--secondary-black);
+  font-weight: 700;
   margin-bottom: 0.5rem;
   line-height: 1.2;
 }
+
+/* Explicit scale so page titles render the same everywhere - without this,
+   a bare <h1>/<h2> falls back to the browser's UA default, which some
+   browsers shrink further depending on how deep it's nested in sectioning
+   elements (<section>/<article>), making page titles look inconsistent
+   across pages for reasons that have nothing to do with intentional design. */
+h1 { font-size: 1.75rem; }
+h2 { font-size: 1.375rem; }
+h3 { font-size: 1.125rem; }
+h4 { font-size: 1rem; }
+h5, h6 { font-size: 0.9375rem; }
 
 a {
   color: var(--primary-red);
@@ -76,6 +92,12 @@ input, select, textarea {
   background-color: var(--background-white);
 }
 
+input:disabled, select:disabled, textarea:disabled {
+  background-color: var(--surface-muted);
+  color: var(--secondary-gray);
+  cursor: not-allowed;
+}
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary-red);
@@ -90,4 +112,12 @@ input:focus, select:focus, textarea:focus {
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }

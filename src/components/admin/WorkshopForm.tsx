@@ -8,10 +8,14 @@ import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
+import { PageLoader } from '@/components/ui/spinner/PageLoader';
+import { Toggle } from '@/components/ui/toggle/Toggle';
 import styles from './WorkshopForm.module.css';
 
 const CATEGORIES = ['AI & Machine Learning', 'Sustainability', 'Cybersecurity', 'Academic Writing', 'Data Science', 'General'];
 const CAPACITY_GAUGE_MAX = 500;
+// Workshops can be scheduled for today or any day after - never locked to a fixed event window.
+const MIN_WORKSHOP_DATE = new Date().toISOString().slice(0, 10);
 
 type FormState = {
   title: string;
@@ -136,7 +140,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
     router.refresh();
   };
 
-  if (fetching) return <div>Loading workshop...</div>;
+  if (fetching) return <PageLoader label="Loading workshop..." />;
 
   const gaugePercent = Math.min((formData.capacity / CAPACITY_GAUGE_MAX) * 100, 100);
 
@@ -177,8 +181,8 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                 />
                 <div className={styles.row}>
                   <div className={styles.textareaWrapper}>
-                    <label className={styles.textareaLabel}>Category</label>
-                    <select name="category" value={formData.category} onChange={handleChange} required>
+                    <label className={styles.textareaLabel} htmlFor="workshop-category">Category</label>
+                    <select id="workshop-category" name="category" value={formData.category} onChange={handleChange} required>
                       <option value="" disabled>Select Category</option>
                       {CATEGORIES.map((c) => (
                         <option key={c} value={c}>{c}</option>
@@ -204,8 +208,9 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                   required
                 />
                 <div className={styles.textareaWrapper}>
-                  <label className={styles.textareaLabel}>Detailed Description</label>
+                  <label className={styles.textareaLabel} htmlFor="workshop-description">Detailed Description</label>
                   <textarea
+                    id="workshop-description"
                     name="description"
                     className={styles.textarea}
                     placeholder="Describe the curriculum, learning outcomes, and prerequisites..."
@@ -227,8 +232,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                     label="Workshop Date"
                     name="date"
                     type="date"
-                    min="2027-01-13"
-                    max="2027-01-17"
+                    min={mode === 'create' ? MIN_WORKSHOP_DATE : undefined}
                     value={formData.date}
                     onChange={handleChange}
                     required
@@ -297,17 +301,11 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                       : 'Saved as a draft — hidden from participants.'}
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className={`${styles.switch} ${formData.status === 'published' ? styles.switchOn : ''}`}
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, status: prev.status === 'published' ? 'draft' : 'published' }))
-                  }
-                  aria-pressed={formData.status === 'published'}
-                  aria-label="Toggle publishing status"
-                >
-                  <span className={styles.switchKnob} />
-                </button>
+                <Toggle
+                  checked={formData.status === 'published'}
+                  onChange={(checked) => setFormData((prev) => ({ ...prev, status: checked ? 'published' : 'draft' }))}
+                  label="Toggle publishing status"
+                />
               </div>
             </CardContent>
           </Card>
@@ -324,6 +322,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                     type="button"
                     className={styles.bannerRemove}
                     onClick={() => setFormData((prev) => ({ ...prev, image_url: '' }))}
+                    aria-label="Remove banner image"
                   >
                     <X size={14} />
                   </button>

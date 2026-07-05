@@ -23,26 +23,12 @@
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
   color: var(--secondary-black);
 }
 
-.logoMark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background-color: var(--primary-red);
-  color: var(--background-white);
-  flex-shrink: 0;
-}
-
-.logoText {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.125rem;
+.logoImage {
+  height: 40px;
+  width: auto;
 }
 
 .content {

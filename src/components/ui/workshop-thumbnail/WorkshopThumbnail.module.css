@@ -1,0 +1,39 @@
+.image {
+  height: 160px;
+  width: 100%;
+  object-fit: cover;
+  background-color: var(--background-off-white);
+  display: block;
+}
+
+.placeholder {
+  height: 160px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholderIcon {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.gradientTech {
+  background: linear-gradient(135deg, #1A1A1A 0%, #3A3A3A 100%);
+}
+
+.gradientResearch {
+  background: linear-gradient(135deg, var(--primary-red) 0%, #5C1010 100%);
+}
+
+.gradientPedagogy {
+  background: linear-gradient(135deg, #4A4A4A 0%, #1A1A1A 100%);
+}
+
+.gradientNetworking {
+  background: linear-gradient(135deg, #8B1B1B 0%, var(--primary-red) 100%);
+}
+
+.gradientGeneral {
+  background: linear-gradient(135deg, #6B1818 0%, #A32020 100%);
+}
