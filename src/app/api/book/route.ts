@@ -30,8 +30,12 @@ export async function GET(req: Request) {
     return Response.json({ error: "Could not fetch bookings" }, { status: 500 });
   }
 
+  const filteredData = (data || []).filter(
+    (b: any) => b.workshops?.status === "published"
+  );
+
   return Response.json({
-    data: data
+    data: filteredData
   }, { status: 200 });
 }
 
@@ -65,11 +69,15 @@ export async function POST(req: Request) {
   // 1. Get the workshop being booked (need its date/time to check conflicts)
   const { data: targetWorkshop, error: targetError } = await supabaseAdmin
     .from("workshops")
-    .select("id, date, start_time")
+    .select("id, date, start_time, status")
     .eq("id", workshopId)
     .single();
 
   if (targetError || !targetWorkshop) {
+    return Response.json({ error: "Workshop not found" }, { status: 404 });
+  }
+
+  if (targetWorkshop.status !== "published") {
     return Response.json({ error: "Workshop not found" }, { status: 404 });
   }
 
@@ -108,7 +116,25 @@ export async function POST(req: Request) {
     );
   }
 
-  // 5. No duplicate, no conflict -> create the booking
+  // 5. Check overbooking limit (uses capacity as fallback until overbooking_limit column exists)
+  const { data: workshopSeats, error: seatsError } = await supabaseAdmin
+    .from("workshops")
+    .select("seats_booked, capacity")
+    .eq("id", workshopId)
+    .single();
+
+  if (seatsError) {
+    return Response.json({ error: "Could not check availability" }, { status: 500 });
+  }
+
+  if (workshopSeats.seats_booked >= workshopSeats.capacity) {
+    return Response.json(
+      { error: "This workshop is fully booked." },
+      { status: 409 }
+    );
+  }
+
+  // 6. No duplicate, no conflict, under limit -> create the booking
   const { data, error } = await supabaseAdmin
     .from("bookings")
     .insert([{ user_id: userId, workshop_id: workshopId }])

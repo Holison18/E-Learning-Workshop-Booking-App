@@ -251,7 +251,7 @@
 }
 
 .menuBtn {
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   width: 36px;
@@ -266,6 +266,12 @@
 }
 .menuBtn:hover {
   background: #E5E7EB;
+}
+
+@media (max-width: 900px) {
+  .menuBtn {
+    display: flex;
+  }
 }
 
 .sidebarClose {

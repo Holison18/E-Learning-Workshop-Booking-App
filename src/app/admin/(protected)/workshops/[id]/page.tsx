@@ -34,6 +34,7 @@ type Workshop = {
   date: string;
   start_time: string;
   capacity: number;
+  overbooking_limit: number;
   seats_booked: number;
 };
 
@@ -113,7 +114,7 @@ export default function WorkshopDetailsPage() {
             </div>
             <div>
               <div style={{ fontSize: '0.875rem', color: 'var(--secondary-gray)' }}>Registered</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{bookings.length} / {workshop.capacity}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{bookings.length} / {workshop.overbooking_limit ?? workshop.capacity}</div>
             </div>
           </CardContent>
         </Card>

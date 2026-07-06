@@ -127,23 +127,6 @@ export default function AdminLoginPage() {
           </div>
         </form>
 
-        <div style={{
-          marginTop: '1.5rem',
-          textAlign: 'center',
-          fontSize: '0.875rem',
-          color: '#6B7280',
-        }}>
-          No account yet?{' '}
-          <a
-            href="/admin/signup"
-            style={{
-              fontWeight: 600,
-              color: 'var(--primary-red)',
-            }}
-          >
-            Create admin account
-          </a>
-        </div>
       </div>
     </div>
   );

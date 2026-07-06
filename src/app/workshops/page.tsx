@@ -96,7 +96,7 @@ export default function WorkshopsPage() {
 
     (async () => {
       try {
-        const { data, error } = await supabase.from('workshops').select('*');
+        const { data, error } = await supabase.from('workshops').select('*').eq('status', 'published');
         if (error) throw error;
         if (!active) return;
         setWorkshops(data || []);
@@ -448,7 +448,7 @@ export default function WorkshopsPage() {
               <div className={styles.timeSlotGrid}>
                 {group.workshops.map((workshop, index) => {
                   const isBooked = bookedIds.has(workshop.id);
-                  const seatsLeft = Math.max(workshop.capacity - (workshop.seats_booked || 0), 0);
+                  const seatsLeft = Math.max((workshop.overbooking_limit ?? workshop.capacity) - (workshop.seats_booked || 0), 0);
                   const isFull = seatsLeft === 0;
 
                   return (
@@ -490,7 +490,7 @@ export default function WorkshopsPage() {
                         </div>
 
                         <div className={styles.workshopFooter}>
-                          <div className={styles.workshopMetaItem}>
+                          <div className={styles.workshopMetaItem} title={`${workshop.seats_booked || 0} bookings of ${workshop.overbooking_limit ?? workshop.capacity} max (capacity: ${workshop.capacity})`}>
                             <CalendarIcon size={14} /> {seatsLeft} seat{seatsLeft === 1 ? '' : 's'} left
                           </div>
 

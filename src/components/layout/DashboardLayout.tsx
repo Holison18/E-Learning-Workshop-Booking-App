@@ -91,7 +91,7 @@ export default function DashboardLayout({ children, admin = false }: { children:
         <button className={styles.sidebarClose} onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu">
           <X size={18} />
         </button>
-        <Link href={admin ? "/admin/dashboard" : "/dashboard"} className={styles.logo}>
+        <Link href="/" className={styles.logo}>
           <span className={styles.logoTitle}>KNUST E-Learning</span>
           <span className={styles.logoSubtitle}>Workshop Portal</span>
         </Link>

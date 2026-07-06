@@ -20,7 +20,7 @@ export async function GET(req: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data, error } = await supabase.from("workshops").select("*");
+  const { data, error } = await supabase.from("workshops").select("*").eq("status", "published");
 
   if (error) {
     return Response.json({ error }, { status: 500 });

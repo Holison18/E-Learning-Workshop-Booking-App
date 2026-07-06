@@ -20,6 +20,7 @@ type FormState = {
   start_time: string;
   end_time: string;
   capacity: number;
+  overbooking_limit: number;
   location: string;
   facilitator: string;
   facilitator_image_url: string;
@@ -35,6 +36,7 @@ const emptyForm: FormState = {
   start_time: '',
   end_time: '',
   capacity: 50,
+  overbooking_limit: 50,
   location: '',
   facilitator: '',
   facilitator_image_url: '',
@@ -69,6 +71,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
             start_time: (data.start_time ?? '').slice(0, 5),
             end_time: (data.end_time ?? '').slice(0, 5),
             capacity: data.capacity ?? 50,
+            overbooking_limit: data.overbooking_limit ?? data.capacity ?? 50,
             location: data.location ?? '',
             facilitator: data.facilitator ?? '',
             facilitator_image_url: data.facilitator_image_url ?? '',
@@ -85,7 +88,8 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: name === 'capacity' ? Number(value) : value }));
+    const numFields = ['capacity', 'overbooking_limit'];
+    setFormData((prev) => ({ ...prev, [name]: numFields.includes(name) ? Number(value) : value }));
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -145,6 +149,8 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
     setLoading(true);
     setError('');
 
+    const limit = Math.max(formData.overbooking_limit, formData.capacity);
+
     const payload = {
       title: formData.title,
       description: formData.description,
@@ -153,6 +159,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
       start_time: formData.start_time,
       end_time: formData.end_time,
       capacity: formData.capacity,
+      overbooking_limit: limit,
       location: formData.location,
       facilitator: formData.facilitator,
       facilitator_image_url: formData.facilitator_image_url || null,
@@ -235,6 +242,15 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                     required
                   />
                 </div>
+                <Input
+                  label="Overbooking Limit"
+                  name="overbooking_limit"
+                  type="number"
+                  min={formData.capacity}
+                  value={formData.overbooking_limit}
+                  onChange={handleChange}
+                  required
+                />
                 <Input
                   label="Facilitator Name"
                   name="facilitator"

@@ -47,11 +47,16 @@ export async function POST(req: Request) {
     start_time,
     end_time,
     capacity,
+    overbooking_limit,
     category,
     status,
     image_url,
     facilitator_image_url,
   } = body;
+
+  if (overbooking_limit !== undefined && overbooking_limit < capacity) {
+    return Response.json({ error: "Overbooking limit cannot be less than capacity" }, { status: 400 });
+  }
 
   const { data, error } = await supabaseAdmin
     .from("workshops")
@@ -65,13 +70,14 @@ export async function POST(req: Request) {
         start_time,
         end_time,
         capacity,
+        overbooking_limit: overbooking_limit ?? capacity,
         category,
         status,
         image_url,
         facilitator_image_url,
       },
     ])
-    .select(); // returns inserted row
+    .select();
 
   if (error) {
     console.error("Error creating workshop:", error);
@@ -104,6 +110,7 @@ export async function PUT(req: Request) {
     start_time,
     end_time,
     capacity,
+    overbooking_limit,
     category,
     status,
     image_url,
@@ -112,6 +119,10 @@ export async function PUT(req: Request) {
 
   if (!id) {
     return Response.json({ error: "Missing id" }, { status: 400 });
+  }
+
+  if (overbooking_limit !== undefined && capacity !== undefined && overbooking_limit < capacity) {
+    return Response.json({ error: "Overbooking limit cannot be less than capacity" }, { status: 400 });
   }
 
   const updateFields: Record<string, unknown> = {};
@@ -123,6 +134,7 @@ export async function PUT(req: Request) {
   if (start_time !== undefined) updateFields.start_time = start_time;
   if (end_time !== undefined) updateFields.end_time = end_time;
   if (capacity !== undefined) updateFields.capacity = capacity;
+  if (overbooking_limit !== undefined) updateFields.overbooking_limit = overbooking_limit;
   if (category !== undefined) updateFields.category = category;
   if (status !== undefined) updateFields.status = status;
   if (image_url !== undefined) updateFields.image_url = image_url;

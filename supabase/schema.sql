@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.workshops (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     capacity INTEGER NOT NULL,
+    overbooking_limit INTEGER NOT NULL DEFAULT 0,
     seats_booked INTEGER DEFAULT 0 NOT NULL,
     category TEXT,
     status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),

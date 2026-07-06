@@ -28,7 +28,7 @@ export default function WorkshopsLayout({ children }: { children: React.ReactNod
         top: 0,
         zIndex: 50,
       }}>
-        <Link href="/workshops" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#111', fontWeight: 700, fontSize: '1.05rem' }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#111', fontWeight: 700, fontSize: '1.05rem' }}>
           <GraduationCap size={22} color="#DC2626" />
           KNUST E-Learning
         </Link>

@@ -198,6 +198,14 @@
   margin: 0 1.25rem;
 }
 
+.fcfsDisclaimer {
+  font-size: 0.7rem;
+  color: #9CA3AF;
+  padding: 0 1.25rem;
+  line-height: 1.4;
+  margin-top: -0.25rem;
+}
+
 .sideCol {
   display: flex;
   flex-direction: column;

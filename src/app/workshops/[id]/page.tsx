@@ -65,7 +65,7 @@ export default function WorkshopDetail() {
 
     (async () => {
       try {
-        const { data, error: fetchError } = await supabase.from('workshops').select('*').eq('id', workshopId).single();
+        const { data, error: fetchError } = await supabase.from('workshops').select('*').eq('id', workshopId).eq('status', 'published').single();
         if (!active) return;
 
         if (fetchError || !data) {
@@ -232,7 +232,7 @@ export default function WorkshopDetail() {
     );
   }
 
-  const seatsLeft = Math.max(workshop.capacity - (workshop.seats_booked || 0), 0);
+  const seatsLeft = Math.max((workshop.overbooking_limit ?? workshop.capacity) - (workshop.seats_booked || 0), 0);
   const isFull = seatsLeft === 0;
 
   return (
@@ -314,7 +314,11 @@ export default function WorkshopDetail() {
 
               <div className={styles.statRow}>
                 <Users size={16} />
-                <span>Capacity: <strong>{workshop.capacity}</strong></span>
+                <span>Physical Seats: <strong>{workshop.capacity}</strong></span>
+              </div>
+              <div className={styles.statRow}>
+                <Users size={16} />
+                <span>Booking Limit: <strong>{workshop.overbooking_limit ?? workshop.capacity}</strong></span>
               </div>
               <div className={styles.statRow}>
                 <Users size={16} />
@@ -323,6 +327,10 @@ export default function WorkshopDetail() {
               <div className={styles.statRow}>
                 <Users size={16} />
                 <span>Remaining: <strong className={isFull ? styles.textDanger : styles.textSuccess}>{seatsLeft}</strong></span>
+              </div>
+
+              <div className={styles.fcfsDisclaimer}>
+                Check-in is first-come, first-served. Having a booking does not guarantee a physical seat.
               </div>
 
               {workshop.location && (
@@ -387,7 +395,7 @@ export default function WorkshopDetail() {
                     <CheckCircle size={18} />
                     <div>
                       <span className={styles.statusLabel}>Availability</span>
-                      <span className={styles.statusValue}>{seatsLeft} seat{seatsLeft !== 1 ? 's' : ''} available</span>
+                      <span className={styles.statusValue}>{seatsLeft} of {workshop.overbooking_limit ?? workshop.capacity} seat{(workshop.overbooking_limit ?? workshop.capacity) !== 1 ? 's' : ''} available</span>
                     </div>
                   </div>
                   <button

@@ -40,6 +40,7 @@ async function getWorkshops(): Promise<Workshop[]> {
   const { data } = await supabaseAdmin
     .from('workshops')
     .select('*')
+    .eq('status', 'published')
     .order('date', { ascending: true })
     .limit(4);
 
@@ -230,7 +231,7 @@ export default async function HomePage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8rem', color: '#666' }}>
                         <Users size={13} />
-                        {Math.max(w.capacity - (w.seats_booked || 0), 0)} seat{Math.max(w.capacity - (w.seats_booked || 0), 0) !== 1 ? 's' : ''} left
+                        {Math.max((w.overbooking_limit ?? w.capacity) - (w.seats_booked || 0), 0)} seat{Math.max((w.overbooking_limit ?? w.capacity) - (w.seats_booked || 0), 0) !== 1 ? 's' : ''} left
                       </div>
                     </div>
                     <Link

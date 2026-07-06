@@ -7,7 +7,9 @@ import {
   CalendarCheck,
   Users,
   TrendingUp,
-  PieChart,
+  UserCheck,
+  Building2,
+  BadgeCheck,
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -23,6 +25,7 @@ type WorkshopRow = {
   title: string;
   date: string;
   capacity: number;
+  overbooking_limit: number;
   seats_booked: number;
   status: string;
 };
@@ -31,6 +34,7 @@ type BookingRow = {
   id: string;
   booked_at: string;
   checked_in: boolean;
+  approved: boolean;
   participants: { first_name: string; last_name: string; organization_name: string | null } | null;
   workshops: { id: string; title: string } | null;
 };
@@ -55,6 +59,9 @@ export default function AdminDashboard() {
   const [remainingSeats, setRemainingSeats] = useState(0);
   const [attendanceRate, setAttendanceRate] = useState(0);
   const [capacityUtilization, setCapacityUtilization] = useState(0);
+  const [totalCheckins, setTotalCheckins] = useState(0);
+  const [totalSeats, setTotalSeats] = useState(0);
+  const [verifiedPeople, setVerifiedPeople] = useState(0);
   const [trend, setTrend] = useState<DayTrend[]>([]);
   const [recentWorkshops, setRecentWorkshops] = useState<WorkshopRow[]>([]);
   const [recentBookings, setRecentBookings] = useState<BookingRow[]>([]);
@@ -67,22 +74,28 @@ export default function AdminDashboard() {
     const bookings: BookingRow[] = json.bookings || [];
 
     let totalCapacity = 0;
+    let totalBookingLimit = 0;
     let totalBooked = 0;
     workshops.forEach((w) => {
       totalCapacity += w.capacity;
+      totalBookingLimit += w.overbooking_limit ?? w.capacity;
       totalBooked += w.seats_booked;
     });
 
-    setRemainingSeats(totalCapacity - totalBooked);
+    setRemainingSeats(totalBookingLimit - totalBooked);
 
     const today = new Date();
     const upcoming = workshops.filter((w) => new Date(w.date) >= new Date(today.toDateString()));
     setRecentWorkshops((upcoming.length > 0 ? upcoming : workshops).slice(0, 4));
 
     setTotalWorkshops(workshops.length);
-    setCapacityUtilization(totalCapacity > 0 ? Math.round((totalBooked / totalCapacity) * 100) : 0);
+    setTotalSeats(totalCapacity);
+    setCapacityUtilization(totalBookingLimit > 0 ? Math.round((totalBooked / totalBookingLimit) * 100) : 0);
     setTotalBookings(bookings.length);
-    setAttendanceRate(bookings.length > 0 ? Math.round((bookings.filter((b) => b.checked_in).length / bookings.length) * 100) : 0);
+    const checkedIn = bookings.filter((b) => b.checked_in);
+    setTotalCheckins(checkedIn.length);
+    setVerifiedPeople(bookings.filter((b) => b.approved).length);
+    setAttendanceRate(bookings.length > 0 ? Math.round((checkedIn.length / bookings.length) * 100) : 0);
     setRecentBookings(bookings.slice(0, 5));
 
     const dayBuckets: DayTrend[] = Array.from({ length: 7 }).map((_, i) => {
@@ -115,9 +128,11 @@ export default function AdminDashboard() {
   const stats = [
     { label: 'Total Workshops', value: totalWorkshops, icon: <GraduationCap size={18} /> },
     { label: 'Total Bookings', value: totalBookings.toLocaleString(), icon: <CalendarCheck size={18} /> },
+    { label: 'Total Seats', value: totalSeats.toLocaleString(), icon: <Building2 size={18} /> },
     { label: 'Remaining Seats', value: remainingSeats.toLocaleString(), icon: <Users size={18} /> },
     { label: 'Attendance Rate', value: `${attendanceRate}%`, icon: <TrendingUp size={18} /> },
-    { label: 'Capacity Utilized', value: `${capacityUtilization}%`, icon: <PieChart size={18} /> },
+    { label: 'Check-ins', value: totalCheckins.toLocaleString(), icon: <UserCheck size={18} /> },
+    { label: 'Verified Bookings', value: verifiedPeople.toLocaleString(), icon: <BadgeCheck size={18} /> },
   ];
 
   return (
@@ -254,7 +269,7 @@ export default function AdminDashboard() {
                     <tr key={w.id}>
                       <td className={styles.workshopTitle}>{w.title}</td>
                       <td className={styles.workshopMeta}>{new Date(w.date).toLocaleDateString()}</td>
-                      <td><ProgressBar value={w.seats_booked} max={w.capacity} /></td>
+                        <td><ProgressBar value={w.seats_booked} max={w.overbooking_limit ?? w.capacity} /></td>
                       <td>
                         <Badge variant={w.status === 'published' ? 'success' : 'neutral'}>{w.status}</Badge>
                       </td>

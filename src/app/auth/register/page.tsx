@@ -3,10 +3,13 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { Input } from '@/components/ui/input/Input';
+import { Select } from '@/components/ui/select/Select';
 import { Button } from '@/components/ui/button/Button';
 import { GoogleIcon } from '@/components/ui/icons/GoogleIcon';
+import { countryCodes } from '@/lib/country-codes';
 import styles from '../AuthForm.module.css';
 
 export default function RegisterPage() {
@@ -15,15 +18,19 @@ export default function RegisterPage() {
     firstName: '',
     lastName: '',
     email: '',
+    countryCode: '+233',
     phone: '',
     organization: '',
     password: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -33,15 +40,26 @@ export default function RegisterPage() {
 
     const trimmedFirst = formData.firstName.trim();
     const trimmedLast = formData.lastName.trim();
+    const trimmedOrg = formData.organization.trim();
+    const fullPhone = `${formData.countryCode}${formData.phone.trim()}`;
 
     if (!trimmedFirst || !trimmedLast) {
       setError('First and last name are required and cannot be just spaces.');
       return;
     }
 
+    if (!formData.phone.trim()) {
+      setError('Phone number is required.');
+      return;
+    }
+
+    if (!trimmedOrg) {
+      setError('Institution / Organization is required.');
+      return;
+    }
+
     setLoading(true);
 
-    // 1. Sign up the user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
@@ -54,29 +72,25 @@ export default function RegisterPage() {
     }
 
     if (authData.user) {
-      // 2. Create the participant profile
       const { error: profileError } = await supabase.from('participants').insert([
         {
           id: authData.user.id,
           first_name: trimmedFirst,
           last_name: trimmedLast,
           email: formData.email,
-          phone: formData.phone,
-          organization_name: formData.organization || null,
+          phone: fullPhone,
+          organization_name: trimmedOrg,
         }
       ]);
 
       if (profileError) {
         console.error('Profile creation error:', profileError);
-        // Fallback: we might want to clean up or just show an error.
-        // Usually Supabase triggers are better for this, but this works if they are logged in automatically.
       }
 
       if (authData.session) {
         router.push('/dashboard');
         router.refresh();
       } else {
-        // Email confirmation is required before a session is created
         router.push(`/auth/confirm-email?email=${encodeURIComponent(formData.email)}`);
       }
     }
@@ -136,33 +150,70 @@ export default function RegisterPage() {
           required
         />
         <div className={styles.row}>
+          <div style={{ flex: '0 0 130px', minWidth: 0 }}>
+            <Select
+              label="Code"
+              name="countryCode"
+              value={formData.countryCode}
+              onChange={handleChange}
+            >
+              {countryCodes.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.country} ({c.code})
+                </option>
+              ))}
+            </Select>
+          </div>
           <Input
             label="Phone Number"
             name="phone"
             type="tel"
-            placeholder="+233XXXXXXXXX"
+            placeholder="XXXXXXXXX"
             value={formData.phone}
             onChange={handleChange}
             required
           />
-          <Input
-            label="Institution (Optional)"
-            name="organization"
-            placeholder="KNUST"
-            value={formData.organization}
-            onChange={handleChange}
-          />
         </div>
         <Input
-          label="Password"
-          name="password"
-          type="password"
-          placeholder="••••••••"
-          value={formData.password}
+          label="Institution / Organization"
+          name="organization"
+          placeholder="KNUST"
+          value={formData.organization}
           onChange={handleChange}
           required
-          minLength={6}
         />
+        <div style={{ position: 'relative' }}>
+          <Input
+            label="Password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="••••••••"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            minLength={6}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: 'absolute',
+              right: '12px',
+              bottom: '10px',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: 'var(--secondary-gray)',
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+            }}
+            tabIndex={-1}
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+          >
+            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
         <Button type="submit" fullWidth disabled={loading}>
           {loading ? 'CREATING ACCOUNT...' : 'SIGN UP'}
         </Button>

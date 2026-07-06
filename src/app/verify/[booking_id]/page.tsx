@@ -34,13 +34,14 @@ export default function VerifyBookingPage() {
             date,
             start_time,
             end_time,
-            location
+            location,
+            status
           )
         `)
         .eq('id', bookingId)
         .single();
 
-      if (error || !data) {
+      if (error || !data || data.workshops?.status !== 'published') {
         setError(true);
       } else {
         setBooking(data);

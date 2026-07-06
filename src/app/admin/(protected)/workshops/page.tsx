@@ -25,6 +25,7 @@ type Workshop = {
   start_time: string;
   end_time: string;
   capacity: number;
+  overbooking_limit: number;
   seats_booked: number;
   description?: string;
   image_url?: string;
@@ -245,7 +246,7 @@ export default function AdminWorkshops() {
                     <td>
                       {w.category ? <Badge variant="info">{w.category}</Badge> : <span className={styles.workshopMeta}>—</span>}
                     </td>
-                    <td><ProgressBar value={w.seats_booked} max={w.capacity} /></td>
+                    <td><ProgressBar value={w.seats_booked} max={w.overbooking_limit ?? w.capacity} /></td>
                     <td style={{ whiteSpace: 'nowrap' }}>
                       {w.facilitator_image_url ? (
                         <img src={w.facilitator_image_url} alt="" style={{ width: 20, height: 20, borderRadius: '50%', objectFit: 'cover', display: 'inline-block', verticalAlign: 'middle', marginRight: '0.375rem' }} />
