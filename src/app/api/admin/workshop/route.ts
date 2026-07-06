@@ -47,6 +47,7 @@ export async function POST(req: Request) {
     start_time,
     end_time,
     capacity,
+    overbooking_limit,
     category,
     status,
     image_url,
@@ -65,6 +66,7 @@ export async function POST(req: Request) {
         start_time,
         end_time,
         capacity,
+        overbooking_limit: overbooking_limit ?? capacity,
         category,
         status,
         image_url,
@@ -104,6 +106,7 @@ export async function PUT(req: Request) {
     start_time,
     end_time,
     capacity,
+    overbooking_limit,
     category,
     status,
     image_url,
@@ -123,6 +126,7 @@ export async function PUT(req: Request) {
   if (start_time !== undefined) updateFields.start_time = start_time;
   if (end_time !== undefined) updateFields.end_time = end_time;
   if (capacity !== undefined) updateFields.capacity = capacity;
+  if (overbooking_limit !== undefined) updateFields.overbooking_limit = overbooking_limit;
   if (category !== undefined) updateFields.category = category;
   if (status !== undefined) updateFields.status = status;
   if (image_url !== undefined) updateFields.image_url = image_url;

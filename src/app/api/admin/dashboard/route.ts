@@ -8,7 +8,7 @@ export async function GET(req: Request) {
   }
 
   const [workshopsRes, bookingsRes, usersRes] = await Promise.all([
-    supabaseAdmin.from("workshops").select("id, title, date, capacity, seats_booked, status"),
+    supabaseAdmin.from("workshops").select("id, title, date, capacity, overbooking_limit, seats_booked, status"),
     supabaseAdmin.from("bookings").select("*").order("booked_at", { ascending: false }),
     supabaseAdmin.auth.admin.listUsers(),
   ]);

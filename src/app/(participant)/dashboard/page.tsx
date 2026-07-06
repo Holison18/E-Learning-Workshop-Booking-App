@@ -141,15 +141,6 @@ export default function ParticipantDashboard() {
           <div className={styles.statValue}>{stats.upcoming}</div>
         </div>
 
-        <div className={styles.statCard}>
-          <div className={styles.statHeader}>
-            <div className={styles.statIconWrapper} style={{ backgroundColor: '#F3F4F6', color: '#4B5563' }}>
-              <Clock size={20} />
-            </div>
-          </div>
-          <div className={styles.statLabel}>Attendance Rate</div>
-          <div className={styles.statValue}>100%</div>
-        </div>
       </section>
 
       <section className={styles.middleSection}>

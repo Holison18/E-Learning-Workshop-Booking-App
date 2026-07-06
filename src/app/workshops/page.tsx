@@ -448,7 +448,8 @@ export default function WorkshopsPage() {
               <div className={styles.timeSlotGrid}>
                 {group.workshops.map((workshop, index) => {
                   const isBooked = bookedIds.has(workshop.id);
-                  const seatsLeft = Math.max((workshop.overbooking_limit ?? workshop.capacity) - (workshop.seats_booked || 0), 0);
+                  const effectiveLimit = workshop.overbooking_limit || workshop.capacity;
+                  const seatsLeft = Math.max(effectiveLimit - (workshop.seats_booked || 0), 0);
                   const isFull = seatsLeft === 0;
 
                   return (

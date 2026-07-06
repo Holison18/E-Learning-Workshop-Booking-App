@@ -57,7 +57,6 @@ export default function AdminDashboard() {
   const [totalWorkshops, setTotalWorkshops] = useState(0);
   const [totalBookings, setTotalBookings] = useState(0);
   const [remainingSeats, setRemainingSeats] = useState(0);
-  const [attendanceRate, setAttendanceRate] = useState(0);
   const [capacityUtilization, setCapacityUtilization] = useState(0);
   const [totalCheckins, setTotalCheckins] = useState(0);
   const [totalSeats, setTotalSeats] = useState(0);
@@ -78,7 +77,7 @@ export default function AdminDashboard() {
     let totalBooked = 0;
     workshops.forEach((w) => {
       totalCapacity += w.capacity;
-      totalBookingLimit += w.overbooking_limit ?? w.capacity;
+      totalBookingLimit += w.overbooking_limit || w.capacity;
       totalBooked += w.seats_booked;
     });
 
@@ -95,7 +94,6 @@ export default function AdminDashboard() {
     const checkedIn = bookings.filter((b) => b.checked_in);
     setTotalCheckins(checkedIn.length);
     setVerifiedPeople(bookings.filter((b) => b.approved).length);
-    setAttendanceRate(bookings.length > 0 ? Math.round((checkedIn.length / bookings.length) * 100) : 0);
     setRecentBookings(bookings.slice(0, 5));
 
     const dayBuckets: DayTrend[] = Array.from({ length: 7 }).map((_, i) => {
@@ -130,7 +128,6 @@ export default function AdminDashboard() {
     { label: 'Total Bookings', value: totalBookings.toLocaleString(), icon: <CalendarCheck size={18} /> },
     { label: 'Total Seats', value: totalSeats.toLocaleString(), icon: <Building2 size={18} /> },
     { label: 'Remaining Seats', value: remainingSeats.toLocaleString(), icon: <Users size={18} /> },
-    { label: 'Attendance Rate', value: `${attendanceRate}%`, icon: <TrendingUp size={18} /> },
     { label: 'Check-ins', value: totalCheckins.toLocaleString(), icon: <UserCheck size={18} /> },
     { label: 'Verified Bookings', value: verifiedPeople.toLocaleString(), icon: <BadgeCheck size={18} /> },
   ];

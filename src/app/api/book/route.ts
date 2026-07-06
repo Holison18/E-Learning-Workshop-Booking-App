@@ -116,18 +116,19 @@ export async function POST(req: Request) {
     );
   }
 
-  // 5. Check overbooking limit (uses capacity as fallback until overbooking_limit column exists)
-  const { data: workshopSeats, error: seatsError } = await supabaseAdmin
+  // 5. Check overbooking limit
+  const { data: seatData, error: seatError } = await supabaseAdmin
     .from("workshops")
-    .select("seats_booked, capacity")
+    .select("seats_booked, overbooking_limit, capacity")
     .eq("id", workshopId)
     .single();
 
-  if (seatsError) {
+  if (seatError) {
     return Response.json({ error: "Could not check availability" }, { status: 500 });
   }
 
-  if (workshopSeats.seats_booked >= workshopSeats.capacity) {
+  const bookableLimit = seatData.overbooking_limit || seatData.capacity || 1;
+  if (seatData.seats_booked >= bookableLimit) {
     return Response.json(
       { error: "This workshop is fully booked." },
       { status: 409 }

@@ -149,6 +149,8 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
     setLoading(true);
     setError('');
 
+    const limit = Math.max(formData.overbooking_limit, formData.capacity);
+
     const payload = {
       title: formData.title,
       description: formData.description,
@@ -157,6 +159,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
       start_time: formData.start_time,
       end_time: formData.end_time,
       capacity: formData.capacity,
+      overbooking_limit: limit,
       location: formData.location,
       facilitator: formData.facilitator,
       facilitator_image_url: formData.facilitator_image_url || null,
