@@ -8,10 +8,17 @@ import { Card, CardContent } from '@/components/ui/card/Card';
 import { Button } from '@/components/ui/button/Button';
 import { AlertCircle, X } from 'lucide-react';
 
-// Using QuickChart API for reliable QR code generation
 const generateQRUrl = (data: string) => {
   return `https://quickchart.io/qr?text=${encodeURIComponent(data)}&size=200`;
 };
+
+const qrData = (booking: Booking, userName: string) => JSON.stringify({
+  id: booking.id,
+  u: userName,
+  w: booking.workshops.title,
+  d: booking.workshops.date,
+  a: booking.approved,
+});
 
 type Booking = {
   id: string;
@@ -43,9 +50,16 @@ export default function MyBookings() {
   };
 
   const handlePrintSchedule = () => {
+    if (bookings.length === 0) {
+      setAlertMsg('You don\'t have any bookings to print. Get booking!');
+      return;
+    }
+
     const approved = bookings.filter(b => b.approved);
-    if (approved.length === 0) {
-      setAlertMsg('You don\'t have any approved workshops to print. Get booking!');
+    const pending = bookings.filter(b => !b.approved);
+
+    if (approved.length === 0 && pending.length === 0) {
+      setAlertMsg('You don\'t have any bookings to print. Get booking!');
       return;
     }
 
@@ -59,9 +73,9 @@ export default function MyBookings() {
       ? `${escapeHtml(user.user_metadata.first_name)} ${escapeHtml(user.user_metadata.last_name)}`
       : user?.email || 'Participant';
 
-    const qrUrl = (id: string) => `https://quickchart.io/qr?text=${encodeURIComponent(`${window.location.origin}/verify/${id}`)}&size=200`;
+    const qrUrl = (booking: Booking) => `https://quickchart.io/qr?text=${encodeURIComponent(qrData(booking, userName))}&size=200`;
 
-    const cards = approved.map(b => {
+    const renderCard = (b: Booking, badge: string, badgeBg: string) => {
       const workshop = b.workshops;
       const timeRange = workshop.end_time
         ? `${formatTime(workshop.start_time)} - ${formatTime(workshop.end_time)}`
@@ -71,13 +85,13 @@ export default function MyBookings() {
         <div class="card">
           <div class="card-left">
             <div class="qr-wrapper">
-              <img src="${qrUrl(b.id)}" alt="QR" />
+              <img src="${qrUrl(b)}" alt="QR" />
             </div>
           </div>
           <div class="card-body">
             <div class="card-header">
               <h3>${escapeHtml(workshop.title)}</h3>
-              <span class="badge">Approved</span>
+              <span class="badge" style="background:${badgeBg}">${badge}</span>
             </div>
             <table class="details">
               <tr><td class="icon">📅</td><td class="label">Date</td><td>${new Date(workshop.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
@@ -89,7 +103,10 @@ export default function MyBookings() {
           </div>
         </div>
       `;
-    }).join('');
+    };
+
+    const approvedCards = approved.map(b => renderCard(b, 'Approved', '#059669')).join('');
+    const pendingCards = pending.map(b => renderCard(b, 'Pending', '#D97706')).join('');
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -101,6 +118,9 @@ export default function MyBookings() {
         .page-header { margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid #059669; }
         .page-header h1 { font-size: 1.75rem; color: #059669; }
         .page-header .meta { margin-top: 0.5rem; color: #666; font-size: 0.875rem; display: flex; justify-content: space-between; }
+        .section-header { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; color: #1a1a1a; }
+        .section-header .count { font-weight: 400; color: #666; font-size: 0.9rem; }
+        .section + .section { margin-top: 2rem; }
         .grid { display: flex; flex-wrap: wrap; gap: 1.25rem; }
         .card { display: flex; gap: 1.5rem; padding: 1.5rem; border: 1px solid #d1d5db; border-radius: 12px; flex: 1 1 400px; max-width: 100%; break-inside: avoid; }
         .card-left { flex-shrink: 0; }
@@ -109,7 +129,7 @@ export default function MyBookings() {
         .card-body { flex: 1; min-width: 0; }
         .card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
         .card-header h3 { font-size: 1.125rem; font-weight: 700; margin: 0; }
-        .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; background: #059669; color: #fff; font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
+        .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 999px; color: #fff; font-size: 0.7rem; font-weight: 700; white-space: nowrap; }
         .details { width: 100%; border-collapse: collapse; }
         .details td { padding: 0.35rem 0; vertical-align: top; }
         .details td:first-child { width: 1.5rem; font-size: 1rem; }
@@ -127,7 +147,8 @@ export default function MyBookings() {
             <span>Printed: ${new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
           </div>
         </div>
-        <div class="grid">${cards}</div>
+        ${approvedCards ? `<div class="section"><div class="section-header">Approved <span class="count">(${approved.length})</span></div><div class="grid">${approvedCards}</div></div>` : ''}
+        ${pendingCards ? `<div class="section"><div class="section-header">Pending <span class="count">(${pending.length})</span></div><div class="grid">${pendingCards}</div></div>` : ''}
       </body>
       </html>
     `);
@@ -229,8 +250,10 @@ export default function MyBookings() {
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '1.5rem' }}>
                   {filtered.map((booking) => {
-                    const verificationUrl = `${window.location.origin}/verify/${booking.id}`;
-                    const qrUrl = generateQRUrl(verificationUrl);
+                    const userName = user?.user_metadata?.first_name && user?.user_metadata?.last_name
+                      ? `${user.user_metadata.first_name} ${user.user_metadata.last_name}`
+                      : user?.email || 'You';
+                    const qrUrl = generateQRUrl(qrData(booking, userName));
 
                     const statusBadge = booking.approved
                       ? { bg: '#059669', label: 'Approved' }
@@ -250,21 +273,23 @@ export default function MyBookings() {
                               <span>⏰ {formatTime(booking.workshops.start_time)} - {formatTime(booking.workshops.end_time)}</span>
                               <span>📍 {booking.workshops.location}</span>
                             </div>
-                            {booking.checked_in && (
-                              <div style={{ marginTop: '0.75rem', color: 'var(--success-green)', fontSize: '0.875rem', fontWeight: 600 }}>
-                                ✓ Checked In
+                            {booking.checked_in ? (
+                              <div style={{ marginTop: '0.75rem' }}>
+                                <div style={{ color: 'var(--success-green)', fontSize: '0.875rem', fontWeight: 600 }}>✓ Checked In</div>
+                                <div style={{ color: '#9CA3AF', fontSize: '0.75rem', marginTop: '0.25rem' }}>Checked-in bookings cannot be cancelled.</div>
+                              </div>
+                            ) : (
+                              <div style={{ marginTop: '1rem' }}>
+                                <Button
+                                  variant="outline"
+                                  type="button"
+                                  onClick={() => handleCancelBooking(booking.id)}
+                                  disabled={cancellingId === booking.id}
+                                >
+                                  {cancellingId === booking.id ? 'Cancelling...' : 'Cancel Booking'}
+                                </Button>
                               </div>
                             )}
-                            <div style={{ marginTop: '1rem' }}>
-                              <Button
-                                variant="outline"
-                                type="button"
-                                onClick={() => handleCancelBooking(booking.id)}
-                                disabled={cancellingId === booking.id}
-                              >
-                                {cancellingId === booking.id ? 'Cancelling...' : 'Cancel Booking'}
-                              </Button>
-                            </div>
                           </div>
                         </CardContent>
                       </Card>

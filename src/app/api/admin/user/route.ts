@@ -12,14 +12,20 @@ export async function GET(req: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const [usersRes, adminsRes] = await Promise.all([
+    supabaseAdmin.auth.admin.listUsers(),
+    supabaseAdmin.from("admins").select("id"),
+  ]);
 
-  const { data, error } = await supabaseAdmin.auth.admin.listUsers()
-  if (error) {
+  if (usersRes.error) {
     return Response.json({ error: "Could not fetch users" }, { status: 500 });
   }
 
+  const adminIds = new Set((adminsRes.data || []).map((a: any) => a.id));
+  const normalUsers = (usersRes.data?.users || []).filter((u: any) => !adminIds.has(u.id));
+
   return Response.json({
-    data: data
+    data: { users: normalUsers }
   }, { status: 200 });
 }
 

@@ -24,28 +24,30 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
       <header style={{
         background: '#fff',
         borderBottom: '1px solid #E5E7EB',
-        padding: '0.75rem 2rem',
+        padding: '0.75rem 1rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
         zIndex: 50,
+        gap: '0.5rem',
       }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#111', fontWeight: 700, fontSize: '1.05rem' }}>
-          <GraduationCap size={22} color="#DC2626" />
-          KNUST E-Learning
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', textDecoration: 'none', color: '#111', fontWeight: 700, fontSize: '0.95rem', flexShrink: 0 }}>
+          <GraduationCap size={20} color="#DC2626" />
+          <span style={{ whiteSpace: 'nowrap' }}>KNUST E-Learning</span>
         </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
           {user ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Link
                 href="/dashboard"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                  padding: '0.5rem 1.25rem',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                  padding: '0.4rem 0.875rem',
                   background: '#DC2626', color: '#fff', textDecoration: 'none',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
+                  borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Dashboard
@@ -53,25 +55,27 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
               <button
                 onClick={handleLogout}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                  padding: '0.5rem 1.25rem',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                  padding: '0.4rem 0.875rem',
                   background: 'transparent', color: '#666',
                   border: '1px solid #D1D5DB',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
+                  borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600,
                   cursor: 'pointer', fontFamily: 'inherit',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <LogOut size={16} /> Sign Out
+                <LogOut size={14} /> Sign Out
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <Link
                 href="/auth/register"
                 style={{
-                  padding: '0.5rem 1.25rem',
+                  padding: '0.4rem 0.75rem',
                   color: '#A32020', textDecoration: 'none',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
+                  borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 Sign Up
@@ -79,13 +83,14 @@ export default function HomeLayout({ children }: { children: React.ReactNode }) 
               <Link
                 href="/auth/login"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                  padding: '0.5rem 1.25rem',
+                  display: 'inline-flex', alignItems: 'center', gap: '0.25rem',
+                  padding: '0.4rem 0.875rem',
                   background: '#DC2626', color: '#fff', textDecoration: 'none',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
+                  borderRadius: '8px', fontSize: '0.8125rem', fontWeight: 600,
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <LogIn size={16} /> Sign In
+                <LogIn size={14} /> Sign In
               </Link>
             </div>
           )}

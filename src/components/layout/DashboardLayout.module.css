@@ -229,4 +229,64 @@
   .sidebar {
     display: none;
   }
+  .sidebarOpen {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    width: 280px;
+    border-right: none;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.15);
+  }
+  .overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    background: rgba(0,0,0,0.4);
+  }
+  .sidebarClose {
+    display: flex;
+  }
+}
+
+.menuBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #F3F4F6;
+  color: #374151;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.menuBtn:hover {
+  background: #E5E7EB;
+}
+
+.sidebarClose {
+  display: none;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: #F3F4F6;
+  color: var(--secondary-gray);
+  cursor: pointer;
+}
+.sidebarClose:hover {
+  background: #E5E7EB;
+}
+
+.overlay {
+  display: none;
 }

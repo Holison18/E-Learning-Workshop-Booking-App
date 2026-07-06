@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Calendar, Clock, MapPin, User, Users, ArrowLeft, CheckCircle, XCircle, Loader2, AlertCircle, X, LogIn, Phone } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Users, ArrowLeft, CheckCircle, XCircle, Loader2, AlertCircle, X, LogIn } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { getSessionToken } from '@/lib/api';
@@ -34,39 +34,6 @@ type BookingRow = {
   workshops?: Workshop | null;
 };
 
-const COUNTRY_CODES = [
-  { code: '+233', label: 'GH +233' },
-  { code: '+1', label: 'US +1' },
-  { code: '+44', label: 'UK +44' },
-  { code: '+234', label: 'NG +234' },
-  { code: '+27', label: 'ZA +27' },
-  { code: '+254', label: 'KE +254' },
-  { code: '+91', label: 'IN +91' },
-  { code: '+86', label: 'CN +86' },
-  { code: '+49', label: 'DE +49' },
-  { code: '+33', label: 'FR +33' },
-  { code: '+61', label: 'AU +61' },
-  { code: '+81', label: 'JP +81' },
-  { code: '+7', label: 'RU +7' },
-  { code: '+55', label: 'BR +55' },
-  { code: '+52', label: 'MX +52' },
-  { code: '+39', label: 'IT +39' },
-  { code: '+34', label: 'ES +34' },
-  { code: '+82', label: 'KR +82' },
-  { code: '+65', label: 'SG +65' },
-  { code: '+60', label: 'MY +60' },
-  { code: '+63', label: 'PH +63' },
-  { code: '+62', label: 'ID +62' },
-  { code: '+66', label: 'TH +66' },
-  { code: '+84', label: 'VN +84' },
-  { code: '+20', label: 'EG +20' },
-  { code: '+212', label: 'MA +212' },
-  { code: '+256', label: 'UG +256' },
-  { code: '+255', label: 'TZ +255' },
-  { code: '+260', label: 'ZM +260' },
-  { code: '+263', label: 'ZW +263' },
-];
-
 export default function WorkshopDetail() {
   const params = useParams();
   const router = useRouter();
@@ -85,12 +52,12 @@ export default function WorkshopDetail() {
     confirmLabel?: string;
   } | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [phoneCountry, setPhoneCountry] = useState('+233');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [savingPhone, setSavingPhone] = useState(false);
 
   const workshopId = params?.id as string;
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     if (!workshopId) return;
@@ -150,9 +117,12 @@ export default function WorkshopDetail() {
     }
 
     if (!user?.phone && !user?.user_metadata?.phone) {
-      setPhoneCountry('+233');
-      setPhoneNumber('');
-      setShowPhoneModal(true);
+      router.push('/account?missing=contact');
+      return;
+    }
+
+    if (!user?.user_metadata?.institution) {
+      router.push('/account?missing=contact');
       return;
     }
 
@@ -229,29 +199,6 @@ export default function WorkshopDetail() {
         }
       },
     });
-  };
-
-  const handleSavePhone = async () => {
-    const full = phoneCountry + phoneNumber.replace(/\s/g, '');
-    if (full.length < 8 || !phoneNumber.trim()) return;
-    setSavingPhone(true);
-    try {
-      const token = await getSessionToken();
-      if (!token) { setSavingPhone(false); return; }
-      const res = await fetch('/api/account/phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ phone: full }),
-      });
-      if (!res.ok) throw new Error();
-      await supabase.auth.updateUser({ phone: full, data: { phone: full } });
-      setShowPhoneModal(false);
-      await handleBook();
-    } catch {
-      setModal({ title: 'Error', message: 'Failed to save phone number.' });
-    } finally {
-      setSavingPhone(false);
-    }
   };
 
   if (loading) {
@@ -407,13 +354,22 @@ export default function WorkshopDetail() {
                       <span className={styles.statusValue}>{booking.approved ? 'Approved' : 'Pending Approval'}</span>
                     </div>
                   </div>
-                  <button
-                    className={`${styles.actionBtn} ${styles.cancelBtn}`}
-                    onClick={handleCancel}
-                    disabled={updating}
-                  >
-                    {updating ? 'Cancelling...' : 'Cancel Booking'}
-                  </button>
+                  {booking.checked_in ? (
+                    <div>
+                      <div style={{ padding: '0.625rem', background: '#ECFDF5', borderRadius: 8, textAlign: 'center', fontSize: '0.875rem', fontWeight: 600, color: '#059669' }}>
+                        ✓ Checked In
+                      </div>
+                      <div style={{ color: '#9CA3AF', fontSize: '0.75rem', textAlign: 'center', marginTop: '0.375rem' }}>Checked-in bookings cannot be cancelled.</div>
+                    </div>
+                  ) : (
+                    <button
+                      className={`${styles.actionBtn} ${styles.cancelBtn}`}
+                      onClick={handleCancel}
+                      disabled={updating}
+                    >
+                      {updating ? 'Cancelling...' : 'Cancel Booking'}
+                    </button>
+                  )}
                 </div>
               ) : isFull ? (
                 <div className={styles.statusSection}>
@@ -556,111 +512,6 @@ export default function WorkshopDetail() {
                   OK
                 </button>
               )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showPhoneModal && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 99999,
-            background: 'rgba(0,0,0,0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '1.5rem',
-          }}
-          onClick={() => { if (!savingPhone) { setShowPhoneModal(false); } }}
-        >
-          <div
-            style={{
-              background: '#fff', borderRadius: '16px',
-              width: '100%', maxWidth: '420px',
-              padding: '1.5rem',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div
-                style={{
-                  width: 44, height: 44, borderRadius: '12px',
-                  background: '#EFF6FF', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}
-              >
-                <Phone size={22} color="#3B82F6" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.05rem', fontWeight: 700 }}>
-                  Phone Number Required
-                </h3>
-                <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: '#666', lineHeight: 1.4 }}>
-                  Please provide your phone number so we can send you SMS notifications about your bookings.
-                </p>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <select
-                    value={phoneCountry}
-                    onChange={(e) => setPhoneCountry(e.target.value)}
-                    style={{
-                      width: 'auto', padding: '0.5rem 0.5rem',
-                      border: '1px solid #D1D5DB', borderRadius: '8px',
-                      fontSize: '0.8125rem', background: '#fff',
-                      flexShrink: 0, maxWidth: '120px',
-                    }}
-                  >
-                    {COUNTRY_CODES.map((c) => (
-                      <option key={c.code} value={c.code}>{c.label}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="tel"
-                    placeholder="Phone number"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSavePhone(); }}
-                    style={{
-                      flex: 1, padding: '0.5rem 0.75rem',
-                      border: '1px solid #D1D5DB', borderRadius: '8px',
-                      fontSize: '0.875rem', outline: 'none',
-                    }}
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <button
-                onClick={() => { if (!savingPhone) setShowPhoneModal(false); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', padding: '0.25rem', display: 'flex' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', gap: '0.75rem' }}>
-              <button
-                onClick={() => setShowPhoneModal(false)}
-                disabled={savingPhone}
-                style={{
-                  padding: '0.5rem 1.25rem',
-                  background: 'transparent', color: '#666', border: '1px solid #D1D5DB',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
-                  cursor: savingPhone ? 'not-allowed' : 'pointer',
-                  opacity: savingPhone ? 0.6 : 1,
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSavePhone}
-                disabled={savingPhone}
-                style={{
-                  padding: '0.5rem 1.25rem',
-                  background: '#3B82F6', color: '#fff', border: 'none',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
-                  cursor: savingPhone ? 'not-allowed' : 'pointer',
-                  opacity: savingPhone ? 0.7 : 1,
-                }}
-              >
-                {savingPhone ? 'Saving...' : 'Save & Continue'}
-              </button>
             </div>
           </div>
         </div>

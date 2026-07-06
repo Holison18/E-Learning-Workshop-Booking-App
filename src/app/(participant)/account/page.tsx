@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Phone } from 'lucide-react';
+import { Phone, Building2, AlertCircle, X } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import styles from './Account.module.css';
 
 const COUNTRY_CODES = [
@@ -41,18 +42,22 @@ const COUNTRY_CODES = [
 
 export default function AccountPage() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
+  const missingContact = searchParams.get('missing') === 'contact';
   
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneCountry, setPhoneCountry] = useState('+233');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [institution, setInstitution] = useState('');
 
   const parsePhone = (full: string) => {
+    const withPlus = full.startsWith('+') ? full : '+' + full;
     const sorted = [...COUNTRY_CODES].sort((a, b) => b.code.length - a.code.length);
     for (const c of sorted) {
-      if (full.startsWith(c.code)) {
-        return { country: c.code, number: full.slice(c.code.length) };
+      if (withPlus.startsWith(c.code)) {
+        return { country: c.code, number: withPlus.slice(c.code.length).replace(/^0+/, '') };
       }
     }
     return { country: '+233', number: full };
@@ -66,7 +71,8 @@ export default function AccountPage() {
       setFirstName(user.user_metadata?.first_name || '');
       setLastName(user.user_metadata?.last_name || '');
       setEmail(user.email || '');
-      const fullPhone = user.phone || user.user_metadata?.phone || '';
+      setInstitution(user.user_metadata?.institution || '');
+      const fullPhone = user.user_metadata?.phone || user.phone || '';
       if (fullPhone) {
         const parsed = parsePhone(fullPhone);
         setPhoneCountry(parsed.country);
@@ -86,7 +92,6 @@ export default function AccountPage() {
       setMessage({ type: 'error', text: 'First name cannot be empty.' });
       return;
     }
-
     if (!trimmedLast) {
       setMessage({ type: 'error', text: 'Last name cannot be empty.' });
       return;
@@ -94,27 +99,87 @@ export default function AccountPage() {
 
     setIsSaving(true);
 
-    const fullPhone = phoneCountry + phoneNumber.replace(/\s/g, '');
+    const digits = phoneNumber.replace(/\D/g, '').replace(/^0+/, '');
+    const fullPhone = phoneCountry + digits;
+
+    if (!digits) {
+      setMessage({ type: 'error', text: 'Please enter a valid phone number.' });
+      setIsSaving(false);
+      return;
+    }
+
+    if (fullPhone.length > 15) {
+      setMessage({ type: 'error', text: 'Phone number is too long. Please check and try again.' });
+      setIsSaving(false);
+      return;
+    }
+
+    if (fullPhone.length < 8) {
+      setMessage({ type: 'error', text: 'Phone number is too short. Please enter the full number.' });
+      setIsSaving(false);
+      return;
+    }
+
+    if (!institution.trim()) {
+      setMessage({ type: 'error', text: 'Please enter your institution name.' });
+      setIsSaving(false);
+      return;
+    }
 
     try {
-      const { data, error } = await supabase.auth.updateUser({
-        phone: fullPhone,
+      console.log('Saving:', { phoneCountry, phoneNumber, digits: phoneNumber.replace(/\D/g, '').replace(/^0+/, ''), fullPhone, trimmedFirst, trimmedLast, institution: institution.trim() });
+      const { error: updateError } = await supabase.auth.updateUser({
         data: {
           first_name: trimmedFirst,
           last_name: trimmedLast,
           phone: fullPhone,
+          institution: institution.trim(),
         }
       });
 
-      if (error) {
-        throw error;
+      if (updateError) {
+        console.warn('updateUser failed, trying API fallback:', updateError.message);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw updateError;
+        const apiRes = await fetch('/api/account/update', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            phone: fullPhone,
+            first_name: trimmedFirst,
+            last_name: trimmedLast,
+            institution: institution.trim(),
+          }),
+        });
+        const apiBody = await apiRes.json().catch(() => ({}));
+        if (!apiRes.ok) {
+          throw new Error(apiBody.error || 'Save failed');
+        }
+        console.log('API fallback succeeded:', apiBody);
+        const syncRes = await supabase.auth.updateUser({ data: { first_name: trimmedFirst, last_name: trimmedLast, phone: fullPhone, institution: institution.trim() } });
+        if (syncRes.error) console.warn('post-fallback sync failed:', syncRes.error.message);
+      } else {
+        console.log('updateUser succeeded');
       }
 
       setFirstName(trimmedFirst);
       setLastName(trimmedLast);
-      setMessage({ type: 'success', text: 'Account updated successfully. Refresh to see changes across the app.' });
+      setMessage({ type: 'success', text: 'Account updated successfully.' });
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Failed to update account.' });
+      console.error('Account update error:', err);
+      const msg = typeof err === 'string' ? err : err?.message || err?.error || '';
+      if (!msg || msg.includes('AuthRetryableFetchError') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network')) {
+        setMessage({ type: 'error', text: 'Could not save. Please check your connection and try again.' });
+      } else if (msg.includes('phone_number') || msg.includes('phone')) {
+        setMessage({ type: 'error', text: 'This phone number is already in use.' });
+      } else if (msg.includes('duplicate key') || msg.includes('already exists')) {
+        setMessage({ type: 'error', text: 'This phone number is already registered.' });
+      } else {
+        setMessage({ type: 'error', text: msg || 'Save failed. Please try again.' });
+      }
     } finally {
       setIsSaving(false);
     }
@@ -122,6 +187,30 @@ export default function AccountPage() {
 
   return (
     <div className={`animate-fade-in ${styles.container}`}>
+      {missingContact && (
+        <div
+          style={{
+            display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
+            padding: '1rem 1.25rem', background: '#FEF2F2', borderRadius: '10px',
+            border: '1px solid #FECACA', marginBottom: '1.5rem',
+          }}
+        >
+          <AlertCircle size={20} color="#DC2626" style={{ flexShrink: 0, marginTop: '0.125rem' }} />
+          <div style={{ flex: 1 }}>
+            <strong style={{ color: '#991B1B', fontSize: '0.875rem' }}>Contact info required</strong>
+            <p style={{ color: '#991B1B', fontSize: '0.8125rem', margin: '0.25rem 0 0' }}>
+              Please provide your phone number and institution below before booking a workshop.
+            </p>
+          </div>
+          <button
+            onClick={() => window.history.replaceState(null, '', '/account')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991B1B', padding: '0.25rem', display: 'flex', flexShrink: 0 }}
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <div className={styles.header}>
         <h1 className={styles.title}>My Account</h1>
         <p className={styles.subtitle}>Update your personal details here. Your first and last name will appear on your certificates.</p>
@@ -167,7 +256,7 @@ export default function AccountPage() {
             </div>
           </div>
 
-          <div className={styles.formGroup} style={{ marginBottom: '1.5rem' }}>
+          <div className={styles.formGroup}>
             <label className={styles.label}>Phone Number</label>
             <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
               <select
@@ -187,10 +276,29 @@ export default function AccountPage() {
                 onChange={(e) => setPhoneNumber(e.target.value)}
                 placeholder="Phone number"
                 style={{ flex: 1 }}
+                required
               />
             </div>
             <p style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
               <Phone size={12} /> Used for SMS notifications about your bookings.
+            </p>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Institution</label>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <Building2 size={16} color="#9CA3AF" style={{ flexShrink: 0 }} />
+              <input
+                type="text"
+                className={styles.input}
+                value={institution}
+                onChange={(e) => setInstitution(e.target.value)}
+                placeholder="e.g. Kwame Nkrumah University of Science and Technology"
+                required
+              />
+            </div>
+            <p style={{ fontSize: '0.75rem', color: '#6B7280', marginTop: '0.25rem' }}>
+              Your affiliated university, college, or organization.
             </p>
           </div>
 

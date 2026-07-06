@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,12 +17,16 @@ import {
   User as UserIcon, 
   Settings, 
   LogOut,
+  ScanQrCode,
+  Menu,
+  X,
 } from 'lucide-react';
 
 export default function DashboardLayout({ children, admin = false }: { children: React.ReactNode, admin?: boolean }) {
   const { user, loading, isAdmin, adminInfo } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (admin) {
@@ -69,6 +73,7 @@ export default function DashboardLayout({ children, admin = false }: { children:
     { href: '/admin/dashboard', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
     { href: '/admin/workshops', label: 'Workshops', icon: <GraduationCap size={18} /> },
     { href: '/admin/bookings', label: 'Bookings', icon: <BookOpen size={18} /> },
+    { href: '/admin/scan', label: 'Scan QR', icon: <ScanQrCode size={18} /> },
     { href: '/admin/users', label: 'Users', icon: <Users size={18} /> },
     { href: '/admin/notifications', label: 'Notifications', icon: <Bell size={18} /> },
   ];
@@ -81,7 +86,11 @@ export default function DashboardLayout({ children, admin = false }: { children:
 
   return (
     <div className={styles.layout}>
-      <aside className={styles.sidebar}>
+      <div className={`${styles.overlay} ${mobileSidebarOpen ? styles.overlay : ''}`} style={{ display: mobileSidebarOpen ? 'block' : 'none' }} onClick={() => setMobileSidebarOpen(false)} />
+      <aside className={`${styles.sidebar} ${mobileSidebarOpen ? styles.sidebarOpen : ''}`}>
+        <button className={styles.sidebarClose} onClick={() => setMobileSidebarOpen(false)} aria-label="Close menu">
+          <X size={18} />
+        </button>
         <Link href={admin ? "/admin/dashboard" : "/dashboard"} className={styles.logo}>
           <span className={styles.logoTitle}>KNUST E-Learning</span>
           <span className={styles.logoSubtitle}>Workshop Portal</span>
@@ -92,6 +101,7 @@ export default function DashboardLayout({ children, admin = false }: { children:
             <Link 
               key={link.href} 
               href={link.href}
+              onClick={() => setMobileSidebarOpen(false)}
               className={`${styles.navLink} ${(pathname === link.href || pathname.startsWith(link.href + '/')) ? styles.active : ''}`}
             >
               {link.icon}
@@ -103,19 +113,19 @@ export default function DashboardLayout({ children, admin = false }: { children:
         <div className={styles.navLabel}>{admin ? 'ACCOUNT' : 'USER ACCOUNT'}</div>
         <nav className={styles.navGroup}>
           {!admin && (
-            <Link href="/notifications" className={styles.navLink}>
+            <Link href="/notifications" className={styles.navLink} onClick={() => setMobileSidebarOpen(false)}>
               <Bell size={18} /> Notifications
             </Link>
           )}
-          <Link href={admin ? '/admin/account' : '/account'} className={styles.navLink}>
+          <Link href={admin ? '/admin/account' : '/account'} className={styles.navLink} onClick={() => setMobileSidebarOpen(false)}>
             <UserIcon size={18} /> My Account
           </Link>
           {!admin && (
-            <Link href="/settings" className={styles.navLink}>
+            <Link href="/settings" className={styles.navLink} onClick={() => setMobileSidebarOpen(false)}>
               <Settings size={18} /> Settings
             </Link>
           )}
-          <button onClick={handleLogout} className={styles.navLink} style={{ marginTop: '0.5rem' }}>
+          <button onClick={() => { handleLogout(); setMobileSidebarOpen(false); }} className={styles.navLink} style={{ marginTop: '0.5rem' }}>
             <LogOut size={18} /> Logout
           </button>
         </nav>
@@ -133,6 +143,9 @@ export default function DashboardLayout({ children, admin = false }: { children:
 
       <div className={styles.mainArea}>
         <header className={styles.topbar}>
+          <button className={styles.menuBtn} onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)} aria-label="Toggle menu">
+            {mobileSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
           <div className={styles.topbarActions}>
             <Bell size={20} className={styles.actionIcon} />
             <div className={styles.topbarProfile}>

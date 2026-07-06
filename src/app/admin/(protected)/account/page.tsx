@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card/Card';
 import { Input } from '@/components/ui/input/Input';
 import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
+import { ShieldPlus, X, AlertCircle } from 'lucide-react';
 import styles from './AdminAccount.module.css';
 
 type AdminRow = {
@@ -24,7 +25,7 @@ const roleLabel: Record<AdminRow['role'], string> = {
 };
 
 export default function AdminAccountPage() {
-  const { user } = useAuth();
+  const { user, adminInfo } = useAuth();
   const [admins, setAdmins] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -32,9 +33,10 @@ export default function AdminAccountPage() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState(false);
-  const [inviteForm, setInviteForm] = useState({ email: '', role: 'admin' as AdminRow['role'] });
-  const [inviting, setInviting] = useState(false);
-  const [inviteError, setInviteError] = useState('');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [createForm, setCreateForm] = useState({ first_name: '', last_name: '', email: '', password: '', role: 'admin' });
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
 
   async function fetchAdmins() {
     const response = await requestApi<{ data: AdminRow[] }>('/api/admin/admin');
@@ -48,11 +50,12 @@ export default function AdminAccountPage() {
     })();
   }, []);
 
-  const currentAdmin = admins.find((a) => a.id === user?.id);
+  const currentAdmin = admins.find((a) => a.id === adminInfo?.id);
+  const isSuperAdmin = currentAdmin?.role === 'super_admin';
   const displayName = currentAdmin?.first_name
     ? `${currentAdmin.first_name} ${currentAdmin.last_name || ''}`.trim()
-    : user?.email?.split('@')[0] || 'Admin';
-  const displayEmail = currentAdmin?.email || user?.email || '';
+    : adminInfo?.email?.split('@')[0] || 'Admin';
+  const displayEmail = currentAdmin?.email || adminInfo?.email || '';
   const displayRole = currentAdmin ? roleLabel[currentAdmin.role] : 'Administrator';
   const initials = displayName
     .split(' ')
@@ -96,47 +99,35 @@ export default function AdminAccountPage() {
     setPasswordSaving(false);
   };
 
-  const handleInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setInviteError('');
-    setInviting(true);
-
-    const { data: participant, error: lookupError } = await supabase
-      .from('participants')
-      .select('id, first_name, last_name, email')
-      .eq('email', inviteForm.email)
-      .maybeSingle();
-
-    if (lookupError || !participant) {
-      setInviteError('No existing account found with that email. They need to create a participant account first.');
-      setInviting(false);
-      return;
-    }
-
-    const { error: insertError } = await supabase.from('admins').insert([
-      {
-        id: participant.id,
-        first_name: participant.first_name,
-        last_name: participant.last_name,
-        email: participant.email,
-        role: inviteForm.role,
-        status: 'pending',
-      },
-    ]);
-
-    if (insertError) {
-      setInviteError(insertError.message);
-    } else {
-      setInviteForm({ email: '', role: 'admin' });
-      fetchAdmins();
-    }
-    setInviting(false);
-  };
-
   const handleRemove = async (id: string) => {
     if (!confirm('Remove this administrator? They will lose admin access.')) return;
     const { error } = await supabase.from('admins').delete().eq('id', id);
     if (!error) fetchAdmins();
+  };
+
+  const handleCreateAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    setCreateError('');
+
+    const res = await fetch('/api/admin/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(createForm),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      setCreateError(data.error || 'Failed to create admin');
+      setCreating(false);
+      return;
+    }
+
+    setShowCreateModal(false);
+    setCreateForm({ first_name: '', last_name: '', email: '', password: '', role: 'admin' });
+    await fetchAdmins();
+    setCreating(false);
   };
 
   if (loading) return <div className={styles.emptyState}>Loading account...</div>;
@@ -206,29 +197,13 @@ export default function AdminAccountPage() {
           <CardContent>
             <div className={styles.teamHeader}>
               <h2 className={styles.teamTitle}>Team Management</h2>
-              <span style={{ fontSize: '0.8125rem', color: 'var(--secondary-gray)' }}>
-                Invite an existing participant account as an administrator.
-              </span>
-            </div>
-
-            <form onSubmit={handleInvite} className={styles.addAdminForm}>
-              <div className={styles.addAdminField}>
-                <Input
-                  label="Email address"
-                  type="email"
-                  placeholder="colleague@knust.edu.gh"
-                  value={inviteForm.email}
-                  onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                  required
-                />
-              </div>
-              <Button type="submit" disabled={inviting}>
-                {inviting ? 'Adding...' : 'Add New Admin'}
-              </Button>
-              {inviteError && (
-                <div style={{ width: '100%', color: 'var(--primary-red)', fontSize: '0.8125rem' }}>{inviteError}</div>
+              {isSuperAdmin && (
+                <Button type="button" onClick={() => setShowCreateModal(true)}>
+                  <ShieldPlus size={16} style={{ marginRight: '0.375rem' }} />
+                  Create Admin
+                </Button>
               )}
-            </form>
+            </div>
 
             <div className={styles.tableWrap}>
               <table className={styles.table}>
@@ -248,14 +223,14 @@ export default function AdminAccountPage() {
                       <td>
                         <div className={styles.adminName}>
                           {a.first_name ? `${a.first_name} ${a.last_name || ''}` : 'Unknown'}
-                          {a.id === user?.id && ' (you)'}
+                          {a.id === adminInfo?.id && ' (you)'}
                         </div>
                         <div className={styles.adminEmail}>{a.email || '—'}</div>
                       </td>
                       <td><Badge variant={a.role === 'super_admin' ? 'primary' : 'info'}>{roleLabel[a.role]}</Badge></td>
                       <td>
                         <div className={styles.actionCell}>
-                          {a.id !== user?.id && (
+                          {a.id !== adminInfo?.id && (
                             <button
                               className={`${styles.iconButton} ${styles.iconButtonDanger}`}
                               onClick={() => handleRemove(a.id)}
@@ -274,6 +249,172 @@ export default function AdminAccountPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* ── Create Admin Modal ── */}
+      {showCreateModal && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, zIndex: 99999,
+            background: 'rgba(0,0,0,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '1.5rem',
+          }}
+          onClick={() => { if (!creating) setShowCreateModal(false); }}
+        >
+          <div
+            style={{
+              background: '#fff', borderRadius: '16px',
+              width: '100%', maxWidth: '440px',
+              padding: '2rem',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>
+                Create New Admin
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', padding: '0.25rem', display: 'flex' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {createError && (
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '0.5rem',
+                padding: '0.75rem', background: '#FEF2F2', borderRadius: '8px',
+                color: '#991B1B', fontSize: '0.875rem', marginBottom: '1rem',
+              }}>
+                <AlertCircle size={16} />
+                {createError}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateAdmin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    First Name
+                  </label>
+                  <input
+                    required
+                    value={createForm.first_name}
+                    onChange={(e) => setCreateForm({ ...createForm, first_name: e.target.value })}
+                    style={{
+                      width: '100%', padding: '0.625rem 0.75rem',
+                      border: '1px solid #D1D5DB', borderRadius: '8px',
+                      fontSize: '0.875rem', outline: 'none',
+                    }}
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                    Last Name
+                  </label>
+                  <input
+                    required
+                    value={createForm.last_name}
+                    onChange={(e) => setCreateForm({ ...createForm, last_name: e.target.value })}
+                    style={{
+                      width: '100%', padding: '0.625rem 0.75rem',
+                      border: '1px solid #D1D5DB', borderRadius: '8px',
+                      fontSize: '0.875rem', outline: 'none',
+                    }}
+                    placeholder="Doe"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                  Email
+                </label>
+                <input
+                  required
+                  type="email"
+                  value={createForm.email}
+                  onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+                  style={{
+                    width: '100%', padding: '0.625rem 0.75rem',
+                    border: '1px solid #D1D5DB', borderRadius: '8px',
+                    fontSize: '0.875rem', outline: 'none',
+                  }}
+                  placeholder="admin@example.com"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                  Password
+                </label>
+                <input
+                  required
+                  type="password"
+                  minLength={6}
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                  style={{
+                    width: '100%', padding: '0.625rem 0.75rem',
+                    border: '1px solid #D1D5DB', borderRadius: '8px',
+                    fontSize: '0.875rem', outline: 'none',
+                  }}
+                  placeholder="Min. 6 characters"
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, color: '#374151', marginBottom: '0.375rem' }}>
+                  Role
+                </label>
+                <select
+                  value={createForm.role}
+                  onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
+                  style={{
+                    width: '100%', padding: '0.625rem 0.75rem',
+                    border: '1px solid #D1D5DB', borderRadius: '8px',
+                    fontSize: '0.875rem', outline: 'none', background: '#fff',
+                  }}
+                >
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Super Admin</option>
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  disabled={creating}
+                  style={{
+                    padding: '0.625rem 1.25rem',
+                    background: 'transparent', color: '#666', border: '1px solid #D1D5DB',
+                    borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
+                    cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.6 : 1,
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={creating}
+                  style={{
+                    padding: '0.625rem 1.5rem',
+                    background: '#DC2626', color: '#fff', border: 'none',
+                    borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
+                    cursor: creating ? 'not-allowed' : 'pointer', opacity: creating ? 0.7 : 1,
+                  }}
+                >
+                  {creating ? 'Creating...' : 'Create Admin'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

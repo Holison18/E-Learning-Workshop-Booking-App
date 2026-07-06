@@ -8,41 +8,8 @@ import { getSessionToken, requestApi } from '@/lib/api';
 import { supabase } from '@/lib/supabase';
 import { Toast } from '@/components/ui/toast/Toast';
 import { formatTime } from '@/lib/formatTime';
-import { Calendar as CalendarIcon, Clock, MapPin, User, AlertCircle, X, Phone, LogIn } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, MapPin, User, AlertCircle, X, LogIn } from 'lucide-react';
 import styles from './Workshops.module.css';
-
-const COUNTRY_CODES = [
-  { code: '+233', label: 'GH +233' },
-  { code: '+1', label: 'US +1' },
-  { code: '+44', label: 'UK +44' },
-  { code: '+234', label: 'NG +234' },
-  { code: '+27', label: 'ZA +27' },
-  { code: '+254', label: 'KE +254' },
-  { code: '+91', label: 'IN +91' },
-  { code: '+86', label: 'CN +86' },
-  { code: '+49', label: 'DE +49' },
-  { code: '+33', label: 'FR +33' },
-  { code: '+61', label: 'AU +61' },
-  { code: '+81', label: 'JP +81' },
-  { code: '+7', label: 'RU +7' },
-  { code: '+55', label: 'BR +55' },
-  { code: '+52', label: 'MX +52' },
-  { code: '+39', label: 'IT +39' },
-  { code: '+34', label: 'ES +34' },
-  { code: '+82', label: 'KR +82' },
-  { code: '+65', label: 'SG +65' },
-  { code: '+60', label: 'MY +60' },
-  { code: '+63', label: 'PH +63' },
-  { code: '+62', label: 'ID +62' },
-  { code: '+66', label: 'TH +66' },
-  { code: '+84', label: 'VN +84' },
-  { code: '+20', label: 'EG +20' },
-  { code: '+212', label: 'MA +212' },
-  { code: '+256', label: 'UG +256' },
-  { code: '+255', label: 'TZ +255' },
-  { code: '+260', label: 'ZM +260' },
-  { code: '+263', label: 'ZW +263' },
-];
 
 const FALLBACK_IMAGE = 'data:image/svg+xml,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200">' +
@@ -72,6 +39,7 @@ type BookingRow = {
   id: string;
   workshop_id: string;
   approved: boolean;
+  checked_in: boolean;
   workshops?: {
     date: string;
     start_time?: string;
@@ -100,6 +68,7 @@ export default function WorkshopsPage() {
   const [bookedIds, setBookedIds] = useState<Set<string>>(new Set());
   const [bookingIdsByWorkshopId, setBookingIdsByWorkshopId] = useState<Record<string, string>>({});
   const [approvalByWorkshopId, setApprovalByWorkshopId] = useState<Record<string, boolean>>({});
+  const [checkedInByWorkshopId, setCheckedInByWorkshopId] = useState<Record<string, boolean>>({});
   const [updatingWorkshopId, setUpdatingWorkshopId] = useState('');
   const [alertModal, setAlertModal] = useState<{
     title: string;
@@ -110,11 +79,6 @@ export default function WorkshopsPage() {
   } | null>(null);
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  const [showPhoneModal, setShowPhoneModal] = useState(false);
-  const [phoneCountry, setPhoneCountry] = useState('+233');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [savingPhone, setSavingPhone] = useState(false);
-  const [pendingBookWorkshop, setPendingBookWorkshop] = useState<Workshop | null>(null);
   const [filters, setFilters] = useState<Filters>({
     search: '',
     category: 'all',
@@ -122,6 +86,10 @@ export default function WorkshopsPage() {
     dateFrom: '',
     dateTo: '',
   });
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -147,6 +115,7 @@ export default function WorkshopsPage() {
       setBookedIds(new Set());
       setBookingIdsByWorkshopId({});
       setApprovalByWorkshopId({});
+      setCheckedInByWorkshopId({});
       return;
     }
 
@@ -175,6 +144,12 @@ export default function WorkshopsPage() {
             return acc;
           }, {})
         );
+        setCheckedInByWorkshopId(
+          bookedRows.reduce<Record<string, boolean>>((acc, booking: BookingRow) => {
+            acc[booking.workshop_id] = !!booking.checked_in;
+            return acc;
+          }, {})
+        );
       } catch (err) {
         console.error('Failed to load bookings:', err);
       }
@@ -200,6 +175,12 @@ export default function WorkshopsPage() {
         return accumulator;
       }, {})
     );
+    setCheckedInByWorkshopId(
+      bookedRows.reduce<Record<string, boolean>>((accumulator, booking: BookingRow) => {
+        accumulator[booking.workshop_id] = !!booking.checked_in;
+        return accumulator;
+      }, {})
+    );
   };
 
   const handleBookWorkshop = async (workshop: Workshop) => {
@@ -222,52 +203,17 @@ export default function WorkshopsPage() {
       return;
     }
 
-    if (bookedIds.size === 0 && !user?.phone && !user?.user_metadata?.phone) {
-      setPendingBookWorkshop(workshop);
-      setPhoneCountry('+233');
-      setPhoneNumber('');
-      setShowPhoneModal(true);
+    if (!user?.phone && !user?.user_metadata?.phone) {
+      router.push('/account?missing=contact');
+      return;
+    }
+
+    if (!user?.user_metadata?.institution) {
+      router.push('/account?missing=contact');
       return;
     }
 
     await proceedBooking(workshop);
-  };
-
-  const handleSavePhone = async () => {
-    const full = phoneCountry + phoneNumber.replace(/\s/g, '');
-    if (full.length < 8 || !phoneNumber.trim()) {
-      setAlertModal({ title: 'Invalid Phone', message: 'Please enter a valid phone number.' });
-      return;
-    }
-    setSavingPhone(true);
-    try {
-      const token = await getSessionToken();
-      if (!token) {
-        setAlertModal({ title: 'Sign In Required', message: 'You must be signed in.' });
-        setSavingPhone(false);
-        return;
-      }
-      const res = await fetch('/api/account/phone', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ phone: full }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error || 'Failed to save phone');
-      }
-      await supabase.auth.updateUser({ phone: full, data: { phone: full } });
-      setShowPhoneModal(false);
-      if (pendingBookWorkshop) {
-        await proceedBooking(pendingBookWorkshop);
-        setPendingBookWorkshop(null);
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to save phone number.';
-      setAlertModal({ title: 'Error', message });
-    } finally {
-      setSavingPhone(false);
-    }
   };
 
   const proceedBooking = async (workshop: Workshop) => {
@@ -563,17 +509,24 @@ export default function WorkshopsPage() {
                               ) : (
                                 <span className={styles.statusPending}>Pending</span>
                               )}
-                              <button
-                                type="button"
-                                className={styles.buttonCancel}
-                                onClick={() => {
-                                  const wid = workshop.id;
-                                  setAlertModal({ title: 'Cancel Booking', message: 'Are you sure you want to cancel this booking? This cannot be undone.', confirmLabel: 'Yes, Cancel', onConfirm: () => { setAlertModal(null); handleCancelBooking(wid); } });
-                                }}
-                                disabled={updatingWorkshopId === workshop.id}
-                              >
-                                {updatingWorkshopId === workshop.id ? 'Cancelling...' : 'Cancel Booking'}
-                              </button>
+                              {checkedInByWorkshopId[workshop.id] ? (
+                                <div>
+                                  <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>✓ Checked In</span>
+                                  <div style={{ color: '#9CA3AF', fontSize: '0.65rem', lineHeight: 1.3 }}>Cannot cancel</div>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className={styles.buttonCancel}
+                                  onClick={() => {
+                                    const wid = workshop.id;
+                                    setAlertModal({ title: 'Cancel Booking', message: 'Are you sure you want to cancel this booking? This cannot be undone.', confirmLabel: 'Yes, Cancel', onConfirm: () => { setAlertModal(null); handleCancelBooking(wid); } });
+                                  }}
+                                  disabled={updatingWorkshopId === workshop.id}
+                                >
+                                  {updatingWorkshopId === workshop.id ? 'Cancelling...' : 'Cancel Booking'}
+                                </button>
+                              )}
                             </div>
                           ) : isFull ? (
                             <button className={styles.buttonAttend} style={{ backgroundColor: '#FCA5A5', color: '#991B1B', cursor: 'not-allowed' }} disabled>
@@ -724,110 +677,6 @@ export default function WorkshopsPage() {
         onClose={() => setToast(null)}
       />
 
-      {showPhoneModal && (
-        <div
-          style={{
-            position: 'fixed', inset: 0, zIndex: 99999,
-            background: 'rgba(0,0,0,0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '1.5rem',
-          }}
-          onClick={() => { if (!savingPhone) { setShowPhoneModal(false); setPendingBookWorkshop(null); } }}
-        >
-          <div
-            style={{
-              background: '#fff', borderRadius: '16px',
-              width: '100%', maxWidth: '420px',
-              padding: '1.5rem',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
-              <div
-                style={{
-                  width: 44, height: 44, borderRadius: '12px',
-                  background: '#EFF6FF', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                }}
-              >
-                <Phone size={22} color="#3B82F6" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <h3 style={{ margin: '0 0 0.25rem', fontSize: '1.05rem', fontWeight: 700 }}>
-                  Phone Number Required
-                </h3>
-                <p style={{ margin: '0 0 0.75rem', fontSize: '0.8125rem', color: '#666', lineHeight: 1.4 }}>
-                  Please provide your phone number so we can send you SMS notifications about your bookings.
-                </p>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <select
-                    value={phoneCountry}
-                    onChange={(e) => setPhoneCountry(e.target.value)}
-                    style={{
-                      width: 'auto', padding: '0.5rem 0.5rem',
-                      border: '1px solid var(--border-light)', borderRadius: '8px',
-                      fontSize: '0.8125rem', background: '#fff',
-                      flexShrink: 0, maxWidth: '120px',
-                    }}
-                  >
-                    {COUNTRY_CODES.map((c) => (
-                      <option key={c.code} value={c.code}>{c.label}</option>
-                    ))}
-                  </select>
-                  <input
-                    type="tel"
-                    placeholder="Phone number"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSavePhone(); }}
-                    style={{
-                      flex: 1, padding: '0.5rem 0.75rem',
-                      border: '1px solid var(--border-light)', borderRadius: '8px',
-                      fontSize: '0.875rem', outline: 'none',
-                    }}
-                    autoFocus
-                  />
-                </div>
-              </div>
-              <button
-                onClick={() => { if (!savingPhone) { setShowPhoneModal(false); setPendingBookWorkshop(null); } }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', padding: '0.25rem', display: 'flex' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem', gap: '0.75rem' }}>
-              <button
-                onClick={() => { setShowPhoneModal(false); setPendingBookWorkshop(null); }}
-                disabled={savingPhone}
-                style={{
-                  padding: '0.5rem 1.25rem',
-                  background: 'transparent', color: '#666', border: '1px solid #D1D5DB',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
-                  cursor: savingPhone ? 'not-allowed' : 'pointer',
-                  opacity: savingPhone ? 0.6 : 1,
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSavePhone}
-                disabled={savingPhone}
-                style={{
-                  padding: '0.5rem 1.25rem',
-                  background: '#3B82F6', color: '#fff', border: 'none',
-                  borderRadius: '8px', fontSize: '0.875rem', fontWeight: 600,
-                  cursor: savingPhone ? 'not-allowed' : 'pointer',
-                  opacity: savingPhone ? 0.7 : 1,
-                }}
-              >
-                {savingPhone ? 'Saving...' : 'Save & Continue'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

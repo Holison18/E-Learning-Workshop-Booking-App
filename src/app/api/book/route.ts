@@ -146,10 +146,10 @@ export async function DELETE(req: Request) {
     return Response.json({ error: "No booking ID provided" }, { status: 400 });
   }
 
- // Look up the booking first to confirm ownership
+  // Look up the booking first to confirm ownership
   const { data: booking, error: fetchError } = await supabaseAdmin
     .from("bookings")
-    .select("id, user_id")
+    .select("id, user_id, checked_in")
     .eq("id", bookId)
     .single();
 
@@ -159,6 +159,10 @@ export async function DELETE(req: Request) {
 
   if (booking.user_id !== userId) {
     return Response.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  if (booking.checked_in) {
+    return Response.json({ error: "Cannot cancel a checked-in booking." }, { status: 400 });
   }
 
   const { data, error } = await supabaseAdmin

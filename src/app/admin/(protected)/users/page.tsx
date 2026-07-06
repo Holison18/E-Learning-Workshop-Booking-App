@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { Trash2, UserCheck, Mail, Calendar, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card/Card';
-import { Button } from '@/components/ui/button/Button';
 import { Badge } from '@/components/ui/badge/Badge';
 import styles from './AdminUsers.module.css';
 
@@ -26,11 +25,10 @@ export default function AdminUsers() {
     const res = await fetch('/api/admin/user');
     const json = await res.json();
     setUsers(json.data?.users || []);
-    setLoading(false);
   }
 
   useEffect(() => {
-    fetchUsers();
+    fetchUsers().finally(() => setLoading(false));
   }, []);
 
   const handleDelete = async (userId: string) => {
@@ -48,20 +46,14 @@ export default function AdminUsers() {
     }
   };
 
-  if (loading) return <div className={styles.emptyState}>Loading users...</div>;
+  if (loading) return <div className={styles.emptyState}>Loading...</div>;
 
   return (
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <div>
-          <h1>User Management</h1>
-          <p className={styles.subtitle}>
-            View and manage all registered users on the platform.
-          </p>
-        </div>
-        <div className={styles.totalBadge}>
-          <UserCheck size={16} />
-          {users.length} Total Users
+          <h1>Users</h1>
+          <p className={styles.subtitle}>Manage all registered users. Admins are excluded.</p>
         </div>
       </div>
 
@@ -74,6 +66,10 @@ export default function AdminUsers() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+        </div>
+        <div className={styles.totalBadge}>
+          <UserCheck size={16} />
+          {users.length} Total Users
         </div>
       </div>
 
@@ -102,43 +98,44 @@ export default function AdminUsers() {
                   if (users.length === 0) return <tr><td colSpan={5} className={styles.emptyState}>No users found.</td></tr>;
                   if (filtered.length === 0) return <tr><td colSpan={5} className={styles.emptyState}>No users match your search.</td></tr>;
                   return filtered.map((u) => {
-                  const firstName = u.user_metadata?.first_name || '';
-                  const lastName = u.user_metadata?.last_name || '';
-                  const name = [firstName, lastName].filter(Boolean).join(' ') || u.email?.split('@')[0] || 'Unknown';
-                  const initials = (firstName?.[0] || u.email?.[0] || '?').toUpperCase();
-                  return (
-                    <tr key={u.id}>
-                      <td>
-                        <div className={styles.userRow}>
-                          <span className={styles.userAvatar}>{initials}</span>
-                          <span className={styles.userName}>{name}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <span className={styles.emailCell}>
-                          <Mail size={14} />
-                          {u.email}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={styles.dateCell}>
-                          <Calendar size={14} />
-                          {new Date(u.created_at).toLocaleDateString()}
-                        </span>
-                      </td>
-                      <td><Badge variant="success">Active</Badge></td>
-                      <td>
-                        <button
-                          className={`${styles.iconButton} ${styles.iconButtonDanger}`}
-                          onClick={() => handleDelete(u.id)}
-                          aria-label="Delete user"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })})()}
+                    const firstName = u.user_metadata?.first_name || '';
+                    const lastName = u.user_metadata?.last_name || '';
+                    const name = [firstName, lastName].filter(Boolean).join(' ') || u.email?.split('@')[0] || 'Unknown';
+                    const initials = (firstName?.[0] || u.email?.[0] || '?').toUpperCase();
+                    return (
+                      <tr key={u.id}>
+                        <td>
+                          <div className={styles.userRow}>
+                            <span className={styles.userAvatar}>{initials}</span>
+                            <span className={styles.userName}>{name}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <span className={styles.emailCell}>
+                            <Mail size={14} />
+                            {u.email}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={styles.dateCell}>
+                            <Calendar size={14} />
+                            {new Date(u.created_at).toLocaleDateString()}
+                          </span>
+                        </td>
+                        <td><Badge variant="success">Active</Badge></td>
+                        <td>
+                          <button
+                            className={`${styles.iconButton} ${styles.iconButtonDanger}`}
+                            onClick={() => handleDelete(u.id)}
+                            aria-label="Delete user"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
