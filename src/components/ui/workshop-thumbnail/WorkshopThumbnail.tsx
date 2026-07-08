@@ -1,13 +1,13 @@
 import React from 'react';
-import { Cpu, FlaskConical, ShieldCheck, PenTool, BarChart3, BookOpen } from 'lucide-react';
+import { Cpu, FlaskConical, PenTool, BookOpen, Users, Cloud } from 'lucide-react';
 import styles from './WorkshopThumbnail.module.css';
 
 const CATEGORY_STYLES: Record<string, { gradient: string; Icon: typeof Cpu }> = {
-  'ai & machine learning': { gradient: styles.gradientTech, Icon: Cpu },
-  'sustainability': { gradient: styles.gradientResearch, Icon: FlaskConical },
-  'cybersecurity': { gradient: styles.gradientPedagogy, Icon: ShieldCheck },
-  'academic writing': { gradient: styles.gradientNetworking, Icon: PenTool },
-  'data science': { gradient: styles.gradientTech, Icon: BarChart3 },
+  'research': { gradient: styles.gradientResearch, Icon: FlaskConical },
+  'educator empowerment': { gradient: styles.gradientPedagogy, Icon: Users },
+  'digital pedagogy': { gradient: styles.gradientPedagogy, Icon: BookOpen },
+  'pixelcraft': { gradient: styles.gradientTech, Icon: PenTool },
+  'skytech lab': { gradient: styles.gradientTech, Icon: Cloud },
   'general': { gradient: styles.gradientGeneral, Icon: BookOpen },
 };
 
