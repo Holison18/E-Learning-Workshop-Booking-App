@@ -31,7 +31,7 @@ export default async function LandingPage() {
         
         <div className={styles.navActions}>
           <Link href="/auth/login" className={`${styles.btn} ${styles.btnPrimary}`}>
-            Register Events
+            Register For Events
           </Link>
         </div>
       </header>
@@ -52,7 +52,7 @@ export default async function LandingPage() {
           </p>
           <div style={{ marginBottom: '2rem' }}>
             <Link href="/auth/login" className={`${styles.btn} ${styles.btnPrimary}`}>
-              Register Events
+              Register For Events
             </Link>
           </div>
           

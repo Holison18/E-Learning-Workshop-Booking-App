@@ -149,7 +149,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
+  border: 1px solid transparent;
 }
 
 .btnPrimary {
@@ -158,9 +158,11 @@
 }
 
 .btnPrimary:hover {
-  background-color: #8A1515; /* Darker red */
+  background-color: transparent;
+  color: var(--primary-red) !important;
+  border: 1px solid var(--primary-red);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(163, 32, 32, 0.3);
+  box-shadow: 0 4px 12px rgba(163, 32, 32, 0.15);
 }
 
 /* Workshops Section */
@@ -292,11 +294,13 @@
   padding: 0.5rem 1rem;
   border-radius: 8px;
   background-color: rgba(163, 32, 32, 0.05);
+  border: 1px solid transparent;
 }
 
 .bookLink:hover {
-  color: #FFFFFF;
-  background-color: var(--primary-red);
+  color: var(--primary-red);
+  background-color: transparent;
+  border: 1px solid var(--primary-red);
 }
 
 /* Footer */

@@ -143,11 +143,13 @@
   padding: 0.5rem 1rem;
   border-radius: 8px;
   background-color: rgba(163, 32, 32, 0.05);
+  border: 1px solid transparent;
 }
 
 .bookLink:hover {
-  color: #FFFFFF;
-  background-color: var(--primary-red);
+  color: var(--primary-red);
+  background-color: transparent;
+  border: 1px solid var(--primary-red);
 }
 
 .noResults {

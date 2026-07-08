@@ -124,10 +124,13 @@
   padding: 0.75rem 1rem;
   border-radius: 8px;
   width: 100%;
+  border: 1px solid transparent;
 }
 
 .bookLink:hover {
-  background-color: #8A1515;
+  background-color: transparent;
+  color: var(--primary-red);
+  border: 1px solid var(--primary-red);
 }
 
 @media (max-width: 640px) {

@@ -113,8 +113,8 @@ export function HeroWorkshopCarousel({ workshops }: HeroWorkshopCarouselProps) {
                 </div>
               </div>
               
-              <Link href="/auth/login" className={styles.bookLink}>
-                Book Now <ArrowRight size={14} />
+              <Link href={`/workshops/${ws.id}`} className={styles.bookLink}>
+                More details <ArrowRight size={14} />
               </Link>
             </div>
           </div>

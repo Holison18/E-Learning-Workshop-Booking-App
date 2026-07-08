@@ -123,8 +123,8 @@ export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps
                     ) : (
                       <Badge variant="success">{seatsLeft} seats left</Badge>
                     )}
-                    <Link href="/auth/login" className={styles.bookLink}>
-                      Book Now <ArrowRight size={14} />
+                    <Link href={`/workshops/${ws.id}`} className={styles.bookLink}>
+                      More details <ArrowRight size={14} />
                     </Link>
                   </div>
                 </div>

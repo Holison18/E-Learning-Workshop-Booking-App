@@ -7,6 +7,7 @@
   transition: all 0.2s ease;
   padding: 0.75rem 1.5rem;
   font-size: 1rem;
+  border: 1px solid transparent;
 }
 
 .button:disabled {
@@ -20,7 +21,9 @@
 }
 
 .primary:hover:not(:disabled) {
-  background-color: var(--primary-red-hover);
+  background-color: transparent;
+  color: var(--primary-red);
+  border: 1px solid var(--primary-red);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -31,7 +34,9 @@
 }
 
 .secondary:hover:not(:disabled) {
-  background-color: var(--primary-red-light-hover);
+  background-color: transparent;
+  color: var(--primary-red);
+  border: 1px solid var(--primary-red);
 }
 
 .outline {
@@ -41,7 +46,10 @@
 }
 
 .outline:hover:not(:disabled) {
-  background-color: var(--primary-red-light);
+  background-color: transparent;
+  color: var(--primary-red);
+  border: 1px solid var(--primary-red);
+  transform: translateY(-1px);
 }
 
 .dark {
@@ -50,7 +58,9 @@
 }
 
 .dark:hover:not(:disabled) {
-  background-color: #000000;
+  background-color: transparent;
+  color: var(--primary-red);
+  border: 1px solid var(--primary-red);
   transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
@@ -61,8 +71,9 @@
 }
 
 .ghost:hover:not(:disabled) {
-  background-color: rgba(0,0,0,0.05);
-  color: var(--secondary-black);
+  background-color: transparent;
+  color: var(--primary-red);
+  border: 1px solid var(--primary-red);
 }
 
 .fullWidth {
