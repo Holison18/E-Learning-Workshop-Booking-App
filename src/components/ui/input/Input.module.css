@@ -17,8 +17,19 @@
   margin-top: 0.25rem;
 }
 
+.inputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .input {
+  width: 100%;
   /* Inherits from globals.css base input style */
+}
+
+.passwordInput {
+  padding-right: 3rem !important;
 }
 
 .errorInput {
@@ -27,4 +38,22 @@
 
 .errorInput:focus {
   box-shadow: 0 0 0 3px rgba(163, 32, 32, 0.2);
+}
+
+.toggleButton {
+  position: absolute;
+  right: 1rem;
+  background: none;
+  border: none;
+  color: var(--secondary-gray);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.toggleButton:hover {
+  color: var(--secondary-black);
 }
