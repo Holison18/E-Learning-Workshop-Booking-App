@@ -40,12 +40,17 @@ export default function DashboardLayout({ children, admin = false }: { children:
       router.push('/dashboard');
     }
     
-    // Route guard for Coordinators
+    // Route guard for Coordinators on admin views
     if (!loading && user && admin && adminRole === 'coordinator') {
       const allowedPaths = ['/admin/dashboard', '/admin/account'];
       if (!allowedPaths.includes(pathname)) {
         router.push('/admin/dashboard');
       }
+    }
+
+    // Route guard for Coordinators on student views
+    if (!loading && user && !admin && isAdmin && adminRole === 'coordinator') {
+      router.push('/admin/dashboard');
     }
   }, [user, loading, admin, isAdmin, adminRole, pathname, router]);
 
