@@ -1,0 +1,62 @@
+.countdownWrapper {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.timeBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.timeBlock:not(:last-child)::after {
+  content: ':';
+  position: absolute;
+  right: -1rem;
+  top: 0;
+  font-family: var(--font-heading);
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.number {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #FFFFFF;
+  line-height: 1;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+.label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 0.5rem;
+  font-weight: 600;
+}
+
+@media (max-width: 768px) {
+  .countdownWrapper {
+    gap: 1rem;
+  }
+  .number {
+    font-size: 1.75rem;
+    min-width: 2.5rem;
+  }
+  .timeBlock:not(:last-child)::after {
+    right: -0.65rem;
+    font-size: 1.5rem;
+  }
+  .label {
+    font-size: 0.65rem;
+  }
+}

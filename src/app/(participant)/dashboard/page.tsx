@@ -180,6 +180,21 @@ function ParticipantDashboard() {
       setStagedBookings(new Set());
       setIsConfirming(false);
       toast.success("Successfully booked " + newlyBookedIds.length + " sessions!");
+
+      // Fire off the confirmation email in the background
+      supabase.auth.getSession().then(({ data: sessionData }) => {
+        const token = sessionData.session?.access_token;
+        if (token) {
+          fetch('/api/emails/booking-confirmation', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ workshopIds: newlyBookedIds })
+          }).catch(console.error);
+        }
+      });
     }
   };
 

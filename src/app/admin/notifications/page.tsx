@@ -106,6 +106,25 @@ export default function AdminNotifications() {
     if (error) {
       toast.error('Error sending announcement: ' + error.message);
     } else {
+      // Fire off the email broadcast in the background
+      supabase.auth.getSession().then(({ data: sessionData }) => {
+        const token = sessionData.session?.access_token;
+        if (token) {
+          fetch('/api/emails/broadcast', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              title: formData.title,
+              message: formData.message,
+              recipient_group: formData.recipient_group
+            })
+          }).catch(console.error);
+        }
+      });
+
       setFormData({ title: '', message: '', recipient_group: 'All Participants' });
       setComposing(false);
       toast.success('Announcement sent successfully.');
