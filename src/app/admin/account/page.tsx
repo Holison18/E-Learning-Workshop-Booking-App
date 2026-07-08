@@ -158,8 +158,33 @@ export default function AdminAccountPage() {
       danger: true,
     });
     if (!confirmed) return;
-    const { error } = await supabase.from('admins').delete().eq('id', id);
-    if (!error) fetchAdmins();
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) {
+        alert('Authentication error. Please log in again.');
+        return;
+      }
+
+      const response = await fetch('/api/admin/delete-admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ adminId: id })
+      });
+
+      if (response.ok) {
+        fetchAdmins();
+      } else {
+        const result = await response.json();
+        alert(result.error || 'Failed to remove administrator');
+      }
+    } catch (err: any) {
+      alert(err.message || 'Failed to remove administrator');
+    }
   };
 
   if (loading) return <PageLoader label="Loading account..." />;

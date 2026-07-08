@@ -12,7 +12,7 @@ import { PageLoader } from '@/components/ui/spinner/PageLoader';
 import { Toggle } from '@/components/ui/toggle/Toggle';
 import styles from './WorkshopForm.module.css';
 
-const CATEGORIES = ['AI & Machine Learning', 'Sustainability', 'Cybersecurity', 'Academic Writing', 'Data Science', 'General'];
+const CATEGORIES = ['Research', 'Educator Empowerment', 'Digital Pedagogy', 'Pixelcraft', 'Skytech Lab', 'General'];
 const CAPACITY_GAUGE_MAX = 500;
 // Workshops can be scheduled for today or any day after - never locked to a fixed event window.
 
