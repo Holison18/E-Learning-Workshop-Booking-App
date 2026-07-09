@@ -63,7 +63,7 @@ export async function POST(request: Request) {
                 <strong>Date:</strong> ${ws.date}<br>
                 <strong>Time:</strong> ${ws.start_time.slice(0, 5)} - ${ws.end_time.slice(0, 5)}<br>
                 <strong>Venue:</strong> ${ws.location || 'TBA'}<br>
-                <strong>Audience:</strong> ${ws.audience || 'TBA'}
+                <strong>Facilitator:</strong> ${ws.facilitator || 'TBA'}
               </p>
             </div>
           `).join('')}
@@ -85,7 +85,7 @@ export async function POST(request: Request) {
       title: ws.title,
       description: buildEventDescription({
         description: ws.description,
-        audience: ws.audience,
+        facilitator: ws.facilitator,
         category: ws.category
       }),
       location: ws.location,

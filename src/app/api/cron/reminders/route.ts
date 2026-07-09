@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     // Fetch workshops happening tomorrow
     const { data: workshops, error: workshopsError } = await supabaseAdmin
       .from('workshops')
-      .select('id, title, date, start_time, end_time, location, audience, description, category')
+      .select('id, title, date, start_time, end_time, location, facilitator, description, category')
       .eq('date', tomorrowStr)
       .eq('status', 'published');
 
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
                 <p style="margin: 0; font-size: 14px; color: #4A4A4A;">
                   <strong>Time:</strong> ${ws.start_time.slice(0, 5)} - ${ws.end_time.slice(0, 5)}<br>
                   <strong>Venue:</strong> ${ws.location || 'TBA'}<br>
-                  <strong>Audience:</strong> ${ws.audience || 'TBA'}
+                  <strong>Facilitator:</strong> ${ws.facilitator || 'TBA'}
                 </p>
               </div>
               
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
           title: ws.title,
           description: buildEventDescription({
             description: ws.description,
-            audience: ws.audience,
+            facilitator: ws.facilitator,
             category: ws.category
           }),
           location: ws.location,

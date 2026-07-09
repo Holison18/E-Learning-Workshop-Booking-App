@@ -6,16 +6,32 @@ stages:
   script:
     - |
       echo "===== Preparing Notification Payload ====="
-      RECIPIENTS="${NOTIFY_LIST:-[]}"
-      DEPLOY_ENVIRONMENT="production"
-      URLS="[\"https://${PROD_URL:-elearningweek.knust.edu.gh}\"]"
 
-      COMMITS=$(jq -n --arg msg "$CI_COMMIT_MESSAGE" '[$msg]')
-      CHANGED=$(git diff-tree --no-commit-id --name-only -r $CI_COMMIT_SHA 2>/dev/null | jq -R . | jq -s . || echo "[]")
-      
+      # NOTIFY_LIST must be a JSON array; empty or invalid values fall back to []
+      if [ -n "$NOTIFY_LIST" ] && echo "$NOTIFY_LIST" | jq -e 'type == "array"' >/dev/null 2>&1; then
+        RECIPIENTS="$NOTIFY_LIST"
+      else
+        RECIPIENTS='[]'
+        if [ -n "$NOTIFY_LIST" ]; then
+          echo "##[warning]NOTIFY_LIST is not a valid JSON array — using []"
+        fi
+      fi
+
+      DEPLOY_ENVIRONMENT="production"
+      URLS=$(jq -n --arg url "https://${PROD_URL:-elearningweek.knust.edu.gh}" '[$url]')
+
+      COMMITS=$(jq -n --arg msg "${CI_COMMIT_MESSAGE:-}" '[$msg]')
+
+      FILES=$(git diff-tree --no-commit-id --name-only -r "$CI_COMMIT_SHA" 2>/dev/null || true)
+      if [ -n "$FILES" ]; then
+        CHANGED=$(printf '%s\n' "$FILES" | jq -R . | jq -s .)
+      else
+        CHANGED='[]'
+      fi
+
       PAYLOAD=$(jq -n \
         --arg     project    "$CI_PROJECT_NAME" \
-        --argjson services   "[\"elearning-workshop\"]" \
+        --argjson services   '["elearning-workshop"]' \
         --arg     env        "$DEPLOY_ENVIRONMENT" \
         --arg     version    "$TAG" \
         --arg     deployer   "${GITLAB_USER_EMAIL:-$GITLAB_USER_NAME}" \
@@ -23,15 +39,18 @@ stages:
         --argjson urls       "$URLS" \
         --argjson commits    "$COMMITS" \
         --argjson changed    "$CHANGED" \
-        --arg     changelog  "$CI_COMMIT_MESSAGE" \
+        --arg     changelog  "${CI_COMMIT_MESSAGE:-}" \
         '{project_name:$project,service_names:$services,environment:$env,
           version:$version,deployed_by:$deployer,
           additional_recipients:$recipients,urls:$urls,
-          commits:$commits,changed_files:$changed,changelog:$changelog}')
+          commits:$commits,changed_files:$changed,changelog:$changelog}') || {
+        echo "##[warning]Failed to build notification payload — skipping"
+        exit 0
+      }
 
       echo "===== Notification Payload ====="
       echo "$PAYLOAD" | jq '.'
-      
+
       if [ -n "$NOTIFICATION_URL" ]; then
         echo "===== Sending to $NOTIFICATION_URL ====="
         HTTP=$(curl -s -o /tmp/_notify_resp.txt -w "%{http_code}" \
@@ -93,5 +112,4 @@ deploy-prod:
     - !reference [.notify, script]
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_COMMIT_BRANCH == "main"'
     - if: '$CI_COMMIT_TAG'
