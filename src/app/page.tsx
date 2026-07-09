@@ -56,7 +56,7 @@ export default async function LandingPage() {
             </Link>
           </div>
           
-          <Countdown targetDate="2026-07-16T08:00:00Z" />
+          <Countdown targetDate="2026-07-13T08:00:00Z" />
         </div>
 
         <HeroWorkshopCarousel workshops={workshops || []} />
