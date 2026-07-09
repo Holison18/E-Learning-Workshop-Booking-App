@@ -128,11 +128,11 @@ export default async function WorkshopDetailsPage({ params }: { params: Promise<
                 </span>
               </div>
 
-              {workshop.facilitator && (
+              {workshop.audience && (
                 <div className={styles.metaItem}>
-                  <span className={styles.metaLabel}>Facilitator</span>
+                  <span className={styles.metaLabel}>Audience</span>
                   <span className={styles.metaValue}>
-                    {workshop.facilitator}
+                    {workshop.audience}
                   </span>
                 </div>
               )}

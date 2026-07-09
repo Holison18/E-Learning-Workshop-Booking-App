@@ -18,7 +18,7 @@ import styles from './AdminWorkshops.module.css';
 type Workshop = {
   id: string;
   title: string;
-  facilitator: string | null;
+  audience: string | null;
   location: string | null;
   category: string | null;
   status: string;
@@ -48,7 +48,7 @@ function AdminWorkshops() {
     const [workshopsRes, bookingsRes] = await Promise.all([
       supabase
         .from('workshops')
-        .select('id, title, facilitator, location, category, status, date, start_time, end_time, capacity, seats_booked')
+        .select('id, title, audience, location, category, status, date, start_time, end_time, capacity, seats_booked')
         .order('date', { ascending: true })
         .order('start_time', { ascending: true }),
       supabase.from('bookings').select('workshop_id, checked_in'),
@@ -111,7 +111,7 @@ function AdminWorkshops() {
       if (dateFrom && w.date < dateFrom) return false;
       if (dateTo && w.date > dateTo) return false;
       if (query) {
-        const haystack = `${w.title} ${w.facilitator || ''} ${w.category || ''}`.toLowerCase();
+        const haystack = `${w.title} ${w.audience || ''} ${w.category || ''}`.toLowerCase();
         if (!haystack.includes(query)) return false;
       }
       return true;
@@ -237,7 +237,7 @@ function AdminWorkshops() {
                   <th>Category</th>
                   <th>Seats Filled</th>
                   <th>Checked In</th>
-                  <th>Facilitator</th>
+                  <th>Audience</th>
                   <th>Action</th>
                 </tr>
               </thead>
@@ -271,7 +271,7 @@ function AdminWorkshops() {
                         <span className={styles.workshopMeta}>—</span>
                       )}
                     </td>
-                    <td>{w.facilitator || '—'}</td>
+                    <td>{w.audience || '—'}</td>
                     <td>
                       <div className={styles.actionCell}>
                         <Link href={`/admin/workshops/${w.id}`} className={styles.iconButton} aria-label="View workshop details">

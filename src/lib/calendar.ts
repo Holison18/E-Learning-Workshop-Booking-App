@@ -14,13 +14,13 @@ export type CalendarEvent = {
 // Builds a genuinely useful event description - facilitator, category, and
 // the workshop's own description - instead of just a bare title/location.
 export function buildEventDescription(opts: {
-  facilitator?: string | null;
+  audience?: string | null;
   category?: string | null;
   description?: string | null;
 }): string {
   const parts: string[] = [];
   if (opts.category) parts.push(`Category: ${opts.category}`);
-  if (opts.facilitator) parts.push(`Facilitator: ${opts.facilitator}`);
+  if (opts.audience) parts.push(`Audience: ${opts.audience}`);
   if (opts.description) parts.push(opts.description);
   parts.push('Booked via the KNUST E-Learning Centre Workshop Portal.');
   return parts.join('\n\n');

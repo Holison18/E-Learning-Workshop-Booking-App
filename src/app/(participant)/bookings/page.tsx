@@ -30,7 +30,7 @@ type Booking = {
     end_time: string;
     location: string;
     category: string | null;
-    facilitator: string | null;
+    audience: string | null;
   };
 };
 
@@ -59,7 +59,7 @@ export default function MyBookings() {
             end_time,
             location,
             category,
-            facilitator
+            audience
           )
         `)
         .eq('participant_id', user.id);

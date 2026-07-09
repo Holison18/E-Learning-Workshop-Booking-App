@@ -14,7 +14,7 @@ type Workshop = {
   image_url?: string;
   date: string;
   start_time: string;
-  facilitator?: string;
+  audience?: string;
   capacity: number;
   seats_booked: number;
 };
@@ -109,10 +109,10 @@ export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps
                       <Clock size={14} />
                       {ws.start_time.slice(0, 5)}
                     </div>
-                    {ws.facilitator && (
+                    {ws.audience && (
                       <div className={styles.metaItem}>
                         <User size={14} />
-                        {ws.facilitator}
+                        {ws.audience}
                       </div>
                     )}
                   </div>

@@ -23,7 +23,7 @@ type ScheduleEntry = {
     start_time: string;
     end_time: string;
     location: string | null;
-    facilitator: string | null;
+    audience: string | null;
     category: string | null;
   } | null;
 };
@@ -49,8 +49,8 @@ export default function SchedulePage() {
 
       const { data } = await supabase
         .from('bookings')
-        .select('id, checked_in, workshops (title, description, date, start_time, end_time, location, facilitator, category)')
-        .eq('participant_id', user.id);
+        .select('id, checked_in, workshops (title, description, date, start_time, end_time, location, audience, category)')
+        .eq('user_id', user.id);
 
       setEntries((data as unknown as ScheduleEntry[]) || []);
       setLoading(false);
@@ -184,9 +184,9 @@ export default function SchedulePage() {
                                   <MapPin size={14} aria-hidden="true" /> {ws.location}
                                 </span>
                               )}
-                              {ws.facilitator && (
+                              {ws.audience && (
                                 <span className={styles.entryMetaItem}>
-                                  <User size={14} aria-hidden="true" /> {ws.facilitator}
+                                  <User size={14} aria-hidden="true" /> {ws.audience}
                                 </span>
                               )}
                             </div>
