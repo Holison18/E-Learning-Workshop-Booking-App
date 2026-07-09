@@ -8,7 +8,8 @@ import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import styles from './Dashboard.module.css';
-import { BookOpen, Calendar as CalendarIcon, UserCheck, User, Clock, Search, X, Check } from 'lucide-react';
+import { BookOpen, Calendar as CalendarIcon, UserCheck, User, Clock, Search, X, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 import { WorkshopThumbnail } from '@/components/ui/workshop-thumbnail/WorkshopThumbnail';
 import { Badge } from '@/components/ui/badge/Badge';
 import { PageLoader } from '@/components/ui/spinner/PageLoader';
@@ -58,6 +59,12 @@ function ParticipantDashboard() {
   const [stagedBookings, setStagedBookings] = useState<Set<Workshop>>(new Set());
   const [isConfirming, setIsConfirming] = useState(false);
   const [showProfilePrompt, setShowProfilePrompt] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  const toggleExpand = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    setExpandedId(prev => prev === id ? null : id);
+  };
 
   useEffect(() => {
     // Live seat counts: reflect other participants' bookings/cancellations
@@ -279,6 +286,7 @@ function ParticipantDashboard() {
     const isFull = seatsBooked >= ws.capacity;
     const seatsLeft = ws.capacity - seatsBooked;
     const conflict = !isBooked && !isStaged ? getConflict(ws) : undefined;
+    const isExpanded = expandedId === ws.id;
 
     const seatsBadgeVariant: 'success' | 'warning' | 'danger' =
       isFull ? 'danger' : seatsLeft <= Math.max(Math.round(ws.capacity * 0.15), 3) ? 'warning' : 'success';
@@ -287,49 +295,69 @@ function ParticipantDashboard() {
       <div key={ws.id} className={`${styles.workshopCard} ${isStaged ? styles.workshopCardSelected : ''}`}>
         <WorkshopThumbnail imageUrl={ws.image_url} title={ws.title} category={ws.category} className={styles.workshopImage} />
         <div className={styles.workshopContent}>
-          <div className={styles.workshopMain}>
-            <div className={styles.workshopTopRow}>
-              <span className={styles.workshopCategory}>{(ws.category || 'General').toUpperCase()}</span>
-              {ws.audience && (
-                <>
-                  <span className={styles.workshopDot} aria-hidden="true">&middot;</span>
-                  <span className={styles.workshopAudience}>
-                    <User size={12} aria-hidden="true" /> {ws.audience}
-                  </span>
-                </>
-              )}
+          <div className={styles.workshopContentTop}>
+            <div className={styles.workshopMain}>
+              <div className={styles.workshopTopRow}>
+                <span className={styles.workshopCategory}>{(ws.category || 'General').toUpperCase()}</span>
+                {ws.audience && (
+                  <>
+                    <span className={styles.workshopDot} aria-hidden="true">&middot;</span>
+                    <span className={styles.workshopAudience}>
+                      <User size={12} aria-hidden="true" /> {ws.audience}
+                    </span>
+                  </>
+                )}
+              </div>
+              <h4 className={styles.workshopTitle}>{ws.title}</h4>
             </div>
-            <h4 className={styles.workshopTitle}>{ws.title}</h4>
-            <p className={styles.workshopDesc}>{ws.description}</p>
+
+            <div className={styles.workshopSide}>
+              <Badge variant={seatsBadgeVariant}>{isFull ? 'Full' : `${seatsLeft} left`}</Badge>
+              <div className={styles.workshopFooter}>
+                {isBooked ? (
+                  <Link href="/bookings" className={styles.workshopBtnNeutral}>
+                    Booked · Manage
+                  </Link>
+                ) : isFull && !isStaged ? (
+                  <button className={styles.workshopBtnDisabled} disabled>Full</button>
+                ) : conflict ? (
+                  <button className={styles.workshopBtnDisabled} disabled title={`Conflicts with "${conflict.title}"`}>
+                    Unavailable
+                  </button>
+                ) : (
+                  <button
+                    className={isStaged ? styles.workshopBtnSelected : styles.workshopBtnAttend}
+                    onClick={() => toggleSelection(ws)}
+                  >
+                    {isStaged ? (
+                      <>
+                        <Check size={15} aria-hidden="true" /> Selected
+                      </>
+                    ) : 'Attend'}
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className={styles.workshopSide}>
-            <Badge variant={seatsBadgeVariant}>{isFull ? 'Full' : `${seatsLeft} left`}</Badge>
-            <div className={styles.workshopFooter}>
-              {isBooked ? (
-                <Link href="/bookings" className={styles.workshopBtnNeutral}>
-                  Booked · Manage
-                </Link>
-              ) : isFull && !isStaged ? (
-                <button className={styles.workshopBtnDisabled} disabled>Full</button>
-              ) : conflict ? (
-                <button className={styles.workshopBtnDisabled} disabled title={`Conflicts with "${conflict.title}"`}>
-                  Unavailable
-                </button>
-              ) : (
-                <button
-                  className={isStaged ? styles.workshopBtnSelected : styles.workshopBtnAttend}
-                  onClick={() => toggleSelection(ws)}
-                >
-                  {isStaged ? (
-                    <>
-                      <Check size={15} aria-hidden="true" /> Selected
-                    </>
-                  ) : 'Attend'}
-                </button>
+          {ws.description && (
+            <div className={styles.expandSection}>
+              <button onClick={(e) => toggleExpand(ws.id, e)} className={styles.expandToggle}>
+                {isExpanded ? (
+                  <>Read Less <ChevronUp size={16} /></>
+                ) : (
+                  <>Read More <ChevronDown size={16} /></>
+                )}
+              </button>
+              
+              {isExpanded && (
+                <div 
+                  className={styles.workshopDescriptionRich}
+                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(ws.description) }}
+                />
               )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     );

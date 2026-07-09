@@ -13,6 +13,11 @@ import { PageLoader } from '@/components/ui/spinner/PageLoader';
 import { Toggle } from '@/components/ui/toggle/Toggle';
 import styles from './WorkshopForm.module.css';
 
+import dynamic from 'next/dynamic';
+import 'react-quill-new/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+
 const CATEGORIES = ['Research', 'Educator Empowerment', 'Digital Pedagogy', 'Pixelcraft', 'Skytech Lab', 'General'];
 const CAPACITY_GAUGE_MAX = 500;
 // Workshops can be scheduled for today or any day after - never locked to a fixed event window.
@@ -87,6 +92,10 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: name === 'capacity' ? Number(value) : value }));
+  };
+
+  const handleDescriptionChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, description: value }));
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,15 +223,14 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                 />
                 <div className={styles.textareaWrapper}>
                   <label className={styles.textareaLabel} htmlFor="workshop-description">Detailed Description</label>
-                  <textarea
-                    id="workshop-description"
-                    name="description"
-                    className={styles.textarea}
-                    placeholder="Describe the curriculum, learning outcomes, and prerequisites..."
-                    value={formData.description}
-                    onChange={handleChange}
-                    required
-                  />
+                  <div className={styles.quillWrapper}>
+                    <ReactQuill
+                      theme="snow"
+                      value={formData.description}
+                      onChange={handleDescriptionChange}
+                      placeholder="Describe the curriculum, learning outcomes, and prerequisites..."
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>

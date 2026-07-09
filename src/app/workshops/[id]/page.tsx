@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 import styles from './WorkshopDetails.module.css';
 
 // Revalidate occasionally, but since it's an event page, we can cache it.
@@ -109,9 +110,16 @@ export default async function WorkshopDetailsPage({ params }: { params: Promise<
             <h1 className={styles.title}>{workshop.title}</h1>
             
             {/* Description fallback */}
-            <p className={styles.description}>
-              {workshop.description || "Join this highly anticipated workshop session. Learn from industry experts and get hands-on experience with the latest technologies and methodologies. Secure your spot now as seats are limited!"}
-            </p>
+            {workshop.description ? (
+              <div 
+                className={styles.descriptionRich}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(workshop.description) }}
+              />
+            ) : (
+              <p className={styles.description}>
+                Join this highly anticipated workshop session. Learn from industry experts and get hands-on experience with the latest technologies and methodologies. Secure your spot now as seats are limited!
+              </p>
+            )}
 
             <div className={styles.metaGrid}>
               <div className={styles.metaItem}>

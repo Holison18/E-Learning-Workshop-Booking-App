@@ -392,7 +392,12 @@
   flex: 1;
   min-width: 0;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+}
+
+.workshopContentTop {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1.5rem;
 }
@@ -447,6 +452,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 .workshopFooter > * {
@@ -547,10 +553,13 @@
     height: 130px !important;
   }
   .workshopContent {
+    padding: 1rem;
+    gap: 0.875rem;
+  }
+  .workshopContentTop {
     flex-direction: column;
     align-items: stretch;
     gap: 0.875rem;
-    padding: 1rem;
   }
   .workshopDesc {
     display: none;
@@ -643,6 +652,80 @@
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.expandSection {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.expandToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  background: none;
+  border: none;
+  color: var(--primary-red);
+  font-weight: 600;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: opacity 0.2s;
+}
+
+.expandToggle:hover {
+  opacity: 0.8;
+}
+
+.workshopDescriptionRich {
+  font-size: 0.875rem;
+  color: var(--secondary-gray);
+  line-height: 1.6;
+  margin-top: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--primary-red-light);
+  border-radius: 8px;
+  background-color: rgba(220, 38, 38, 0.02);
+  animation: slideDown 0.3s ease-out;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.workshopDescriptionRich * {
+  max-width: 100%;
+}
+
+.workshopDescriptionRich p {
+  margin-bottom: 0.75rem;
+}
+
+.workshopDescriptionRich p:last-child {
+  margin-bottom: 0;
+}
+
+.workshopDescriptionRich ul, .workshopDescriptionRich ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.workshopDescriptionRich li {
+  margin-bottom: 0.25rem;
+}
+
+.workshopDescriptionRich a {
+  color: var(--primary-red);
+  text-decoration: underline;
+}
+
+.workshopDescriptionRich a:hover {
+  text-decoration: none;
+}
+
+.workshopDescriptionRich strong {
+  color: var(--secondary-black);
 }
 
 .workshopBtnSelected {
