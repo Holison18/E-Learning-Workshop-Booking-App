@@ -24,8 +24,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminRole, setAdminRole] = useState<'super_admin' | 'coordinator' | null>(null);
 
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('admins')
+        .select('id, role')
+        .eq('id', userId)
+        .single();
+      
+      if (data) {
+        setIsAdmin(true);
+        setAdminRole(data.role as 'super_admin' | 'coordinator');
+      } else {
+        setIsAdmin(false);
+        setAdminRole(null);
+      }
+    } catch (err) {
+      console.error('Error checking admin status:', err);
+      setIsAdmin(false);
+      setAdminRole(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Check active sessions and sets the user
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -51,29 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const checkAdminStatus = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('admins')
-        .select('id, role')
-        .eq('id', userId)
-        .single();
-      
-      if (data) {
-        setIsAdmin(true);
-        setAdminRole(data.role as 'super_admin' | 'coordinator');
-      } else {
-        setIsAdmin(false);
-        setAdminRole(null);
-      }
-    } catch (err) {
-      console.error('Error checking admin status:', err);
-      setIsAdmin(false);
-      setAdminRole(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   return (
     <AuthContext.Provider value={{ user, loading, isAdmin, adminRole }}>
