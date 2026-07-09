@@ -48,7 +48,7 @@ function AdminWorkshops() {
     const [workshopsRes, bookingsRes] = await Promise.all([
       supabase
         .from('workshops')
-        .select('id, title, audience, location, category, status, date, start_time, end_time, capacity, seats_booked')
+        .select('*')
         .order('date', { ascending: true })
         .order('start_time', { ascending: true }),
       supabase.from('bookings').select('workshop_id, checked_in'),
