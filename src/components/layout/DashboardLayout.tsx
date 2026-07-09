@@ -34,29 +34,29 @@ export default function DashboardLayout({ children, admin = false }: { children:
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/auth/login');
+      window.location.href = '/auth/login';
     }
     if (!loading && user && admin && !isAdmin) {
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     }
     
     // Route guard for Coordinators on admin views
     if (!loading && user && admin && adminRole === 'coordinator') {
       const allowedPaths = ['/admin/dashboard', '/admin/account'];
       if (!allowedPaths.includes(pathname)) {
-        router.push('/admin/dashboard');
+        window.location.href = '/admin/dashboard';
       }
     }
 
     // Route guard for Coordinators on student views
     if (!loading && user && !admin && isAdmin && adminRole === 'coordinator') {
-      router.push('/admin/dashboard');
+      window.location.href = '/admin/dashboard';
     }
-  }, [user, loading, admin, isAdmin, adminRole, pathname, router]);
+  }, [user, loading, admin, isAdmin, adminRole, pathname]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/auth/login');
+    window.location.href = '/auth/login';
   };
 
   if (loading || !user || (admin && !isAdmin)) {

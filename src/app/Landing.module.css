@@ -154,14 +154,16 @@
 }
 
 .btnPrimary {
-  background-color: #1A7056; /* Exact green from screenshot */
+  background-color: var(--primary-red);
   color: #FFFFFF !important;
+  border: 2px solid var(--primary-red);
 }
 
 .btnPrimary:hover {
-  background-color: #125541;
+  background-color: transparent;
+  color: var(--primary-red) !important;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(26, 112, 86, 0.3);
+  box-shadow: 0 4px 12px rgba(163, 32, 32, 0.2);
 }
 
 /* Workshops Section */

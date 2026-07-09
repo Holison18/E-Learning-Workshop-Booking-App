@@ -42,11 +42,12 @@ export default async function LandingPage() {
         <div className={styles.heroVerticalText}>KNUST 2026</div>
         
         <div className={styles.heroContent}>
-          <span className={styles.heroEyebrow}>Welcome to the KNUST E-Learning Conference 2026 | 16-17 July 2026</span>
-          <h1 className={styles.heroTitle}>
-            A LEADING EVENT FOR <span className={styles.highlightText}>EDUCATORS</span>, <span className={styles.highlightText}>POLICYMAKERS</span>, <span className={styles.highlightText}>INDUSTRY LEADERS</span> & EXPERTS IN EDUCATION
+          <span className={styles.heroEyebrow}>Welcome to the KNUST E-Learning Week | 13-17 July 2026</span>
+          <h1 className={styles.heroTitle} style={{ textTransform: 'none' }}>
+            Workshops and tutorials designed for <span className={styles.highlightText}>students</span>, <span className={styles.highlightText}>graduates</span>, <span className={styles.highlightText}>pre-tertiary educators</span>, and administrators.
           </h1>
           <p className={styles.heroTheme}>
+            View the schedule and book events. <br/><br/>
             Theme: Harnessing AI and Emerging Digital Technologies to Advance Inclusive, Equitable, and Ethical Learning Ecosystems.
           </p>
           <div style={{ marginBottom: '2rem' }}>
