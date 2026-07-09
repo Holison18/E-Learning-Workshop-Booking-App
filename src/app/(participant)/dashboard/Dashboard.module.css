@@ -434,7 +434,7 @@
   overflow: hidden;
 }
 
-.workshopFacilitator {
+.workshopAudience {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -556,7 +556,7 @@
     display: none;
   }
   .workshopDot,
-  .workshopFacilitator {
+  .workshopAudience {
     display: none;
   }
   .workshopSide {

@@ -17,7 +17,7 @@ CREATE TABLE public.workshops (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     title TEXT NOT NULL,
     description TEXT NOT NULL,
-    facilitator TEXT,
+    audience TEXT,
     location TEXT,
     date DATE NOT NULL,
     start_time TIME NOT NULL,

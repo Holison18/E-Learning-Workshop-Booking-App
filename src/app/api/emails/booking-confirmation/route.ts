@@ -63,7 +63,11 @@ export async function POST(request: Request) {
                 <strong>Date:</strong> ${ws.date}<br>
                 <strong>Time:</strong> ${ws.start_time.slice(0, 5)} - ${ws.end_time.slice(0, 5)}<br>
                 <strong>Venue:</strong> ${ws.location || 'TBA'}<br>
+<<<<<<< HEAD
                 <strong>Facilitator:</strong> ${ws.facilitator || 'TBA'}
+=======
+                <strong>Audience:</strong> ${ws.audience || 'TBA'}
+>>>>>>> 95479d4e332219172bd86bdbfc18a91e07c9c343
               </p>
             </div>
           `).join('')}
@@ -85,7 +89,7 @@ export async function POST(request: Request) {
       title: ws.title,
       description: buildEventDescription({
         description: ws.description,
-        facilitator: ws.facilitator,
+        audience: ws.audience,
         category: ws.category
       }),
       location: ws.location,

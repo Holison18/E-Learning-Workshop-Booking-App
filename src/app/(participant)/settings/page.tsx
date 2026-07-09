@@ -20,7 +20,7 @@ type UpcomingBooking = {
     start_time: string;
     end_time: string;
     location: string | null;
-    facilitator: string | null;
+    audience: string | null;
     category: string | null;
   } | null;
 };
@@ -47,7 +47,7 @@ export default function SettingsPage() {
       if (!user) return;
       const { data } = await supabase
         .from('bookings')
-        .select('id, workshops (title, description, date, start_time, end_time, location, facilitator, category)')
+        .select('id, workshops (title, description, date, start_time, end_time, location, audience, category)')
         .eq('participant_id', user.id);
       setBookings((data as unknown as UpcomingBooking[]) || []);
     }

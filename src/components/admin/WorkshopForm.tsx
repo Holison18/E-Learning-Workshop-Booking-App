@@ -25,7 +25,7 @@ type FormState = {
   end_time: string;
   capacity: number;
   location: string;
-  facilitator: string;
+  audience: string;
   image_url: string;
   status: 'draft' | 'published';
 };
@@ -39,7 +39,7 @@ const emptyForm: FormState = {
   end_time: '',
   capacity: 50,
   location: '',
-  facilitator: '',
+  audience: '',
   image_url: '',
   status: 'draft',
 };
@@ -74,7 +74,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
           end_time: (data.end_time ?? '').slice(0, 5),
           capacity: data.capacity ?? 50,
           location: data.location ?? '',
-          facilitator: data.facilitator ?? '',
+          audience: data.audience ?? '',
           image_url: data.image_url ?? '',
           status: (data.status as 'draft' | 'published') ?? 'draft',
         });
@@ -124,7 +124,7 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
       end_time: formData.end_time,
       capacity: formData.capacity,
       location: formData.location,
-      facilitator: formData.facilitator,
+      audience: formData.audience,
       image_url: formData.image_url || null,
       status: formData.status,
     };
@@ -204,10 +204,10 @@ export function WorkshopForm({ mode, workshopId }: { mode: 'create' | 'edit'; wo
                   />
                 </div>
                 <Input
-                  label="Facilitator Name"
-                  name="facilitator"
-                  placeholder="e.g., Dr. Kwame Mensah"
-                  value={formData.facilitator}
+                  label="Target Audience"
+                  name="audience"
+                  placeholder="e.g., Undergraduate Students, Faculty"
+                  value={formData.audience}
                   onChange={handleChange}
                   required
                 />

@@ -26,7 +26,7 @@ type Workshop = {
   end_time: string;
   capacity: number;
   seats_booked: number;
-  facilitator: string;
+  audience: string;
   location: string;
   image_url?: string;
   category?: string;
@@ -267,7 +267,7 @@ function ParticipantDashboard() {
 
   const searchResults = query
     ? workshops.filter((ws) => {
-        const haystack = `${ws.title} ${ws.facilitator || ''} ${ws.description} ${ws.category || ''}`.toLowerCase();
+        const haystack = `${ws.title} ${ws.audience || ''} ${ws.description} ${ws.category || ''}`.toLowerCase();
         return haystack.includes(query.toLowerCase());
       })
     : [];
@@ -290,11 +290,11 @@ function ParticipantDashboard() {
           <div className={styles.workshopMain}>
             <div className={styles.workshopTopRow}>
               <span className={styles.workshopCategory}>{(ws.category || 'General').toUpperCase()}</span>
-              {ws.facilitator && (
+              {ws.audience && (
                 <>
                   <span className={styles.workshopDot} aria-hidden="true">&middot;</span>
-                  <span className={styles.workshopFacilitator}>
-                    <User size={12} aria-hidden="true" /> {ws.facilitator}
+                  <span className={styles.workshopAudience}>
+                    <User size={12} aria-hidden="true" /> {ws.audience}
                   </span>
                 </>
               )}
@@ -429,7 +429,7 @@ function ParticipantDashboard() {
             {searchResults.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '3rem', color: '#6B7280' }}>
                 <Search size={32} style={{ margin: '0 auto 0.75rem', display: 'block', opacity: 0.4 }} />
-                No workshops match &ldquo;{query}&rdquo;. Try a different topic, facilitator, or category.
+                No workshops match &ldquo;{query}&rdquo;. Try a different topic, audience, or category.
               </div>
             ) : (
               <div className={styles.timeSlotGrid}>
