@@ -154,16 +154,14 @@
 }
 
 .btnPrimary {
-  background-color: var(--primary-red);
+  background-color: #1A7056; /* Exact green from screenshot */
   color: #FFFFFF !important;
 }
 
 .btnPrimary:hover {
-  background-color: transparent;
-  color: var(--primary-red) !important;
-  border: 1px solid var(--primary-red);
+  background-color: #125541;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(163, 32, 32, 0.15);
+  box-shadow: 0 4px 12px rgba(26, 112, 86, 0.3);
 }
 
 /* Workshops Section */
@@ -299,9 +297,8 @@
 }
 
 .bookLink:hover {
-  color: var(--primary-red);
-  background-color: transparent;
-  border: 1px solid var(--primary-red);
+  color: #FFFFFF;
+  background-color: var(--primary-red);
 }
 
 /* Footer */
