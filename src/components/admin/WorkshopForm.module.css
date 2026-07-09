@@ -82,6 +82,31 @@
   min-height: 120px;
 }
 
+.quillWrapper {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  background-color: var(--background-white);
+}
+
+.quillWrapper :global(.ql-toolbar) {
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  background-color: var(--background-white);
+  padding: 8px;
+}
+
+.quillWrapper :global(.ql-container) {
+  border: none;
+  min-height: 150px;
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+}
+
+.quillWrapper :global(.ql-editor) {
+  min-height: 150px;
+}
+
 /* Total capacity gauge */
 .gaugeWrapper {
   display: flex;

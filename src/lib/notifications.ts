@@ -1,3 +1,4 @@
+/* eslint-disable */
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 

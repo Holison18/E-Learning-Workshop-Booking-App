@@ -2,7 +2,8 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, User, ArrowRight } from 'lucide-react';
+import { Calendar, Clock, User, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import DOMPurify from 'isomorphic-dompurify';
 import styles from './WorkshopFilterList.module.css';
 import { WorkshopThumbnail } from '@/components/ui/workshop-thumbnail/WorkshopThumbnail';
 import { Badge } from '@/components/ui/badge/Badge';
@@ -10,6 +11,7 @@ import { Badge } from '@/components/ui/badge/Badge';
 type Workshop = {
   id: string;
   title: string;
+  description?: string;
   category?: string;
   image_url?: string;
   date: string;
@@ -25,6 +27,7 @@ interface WorkshopFilterListProps {
 
 export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps) {
   const [selectedDate, setSelectedDate] = useState<string>('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Extract unique dates and sort them
   const uniqueDates = useMemo(() => {
@@ -44,13 +47,18 @@ export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps
     return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
+  const toggleExpand = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    setExpandedId(prev => prev === id ? null : id);
+  };
+
   return (
     <div>
       {/* Date Filter Tabs */}
       {uniqueDates.length > 0 && (
         <div className={styles.filterContainer}>
           <button
-            onClick={() => setSelectedDate('all')}
+            onClick={() => { setSelectedDate('all'); setExpandedId(null); }}
             className={`${styles.filterTab} ${selectedDate === 'all' ? styles.filterTabActive : ''}`}
           >
             All Days
@@ -59,7 +67,7 @@ export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps
           {uniqueDates.map(date => (
             <button
               key={date}
-              onClick={() => setSelectedDate(date)}
+              onClick={() => { setSelectedDate(date); setExpandedId(null); }}
               className={`${styles.filterTab} ${selectedDate === date ? styles.filterTabActive : ''}`}
             >
               {formatDateTab(date)}
@@ -79,11 +87,12 @@ export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps
             const seatsBooked = ws.seats_booked || 0;
             const isFull = seatsBooked >= ws.capacity;
             const seatsLeft = ws.capacity - seatsBooked;
+            const isExpanded = expandedId === ws.id;
             
             return (
               <div 
                 key={`${ws.id}-${selectedDate}`} // Key includes selectedDate to re-trigger animation on filter
-                className={styles.workshopCard}
+                className={`${styles.workshopCard} ${isExpanded ? styles.expandedCard : ''}`}
                 style={{ animationDelay: `${index * 0.05}s` }}
               >
                 <Link href={`/workshops/${ws.id}`} style={{ textDecoration: 'none' }}>
@@ -117,6 +126,25 @@ export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps
                     )}
                   </div>
                   
+                  {ws.description && (
+                    <div className={styles.expandSection}>
+                      <button onClick={(e) => toggleExpand(ws.id, e)} className={styles.expandToggle}>
+                        {isExpanded ? (
+                          <>Read Less <ChevronUp size={16} /></>
+                        ) : (
+                          <>Read More <ChevronDown size={16} /></>
+                        )}
+                      </button>
+                      
+                      {isExpanded && (
+                        <div 
+                          className={styles.workshopDescriptionRich}
+                          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(ws.description) }}
+                        />
+                      )}
+                    </div>
+                  )}
+                  
                   <div className={styles.workshopFooter}>
                     {isFull ? (
                       <Badge variant="danger">Full</Badge>
@@ -124,7 +152,7 @@ export function WorkshopFilterList({ initialWorkshops }: WorkshopFilterListProps
                       <Badge variant="success">{seatsLeft} seats left</Badge>
                     )}
                     <Link href={`/workshops/${ws.id}`} className={styles.bookLink}>
-                      More details <ArrowRight size={14} />
+                      Book Now <ArrowRight size={14} />
                     </Link>
                   </div>
                 </div>

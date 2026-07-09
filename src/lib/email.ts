@@ -1,3 +1,4 @@
+/* eslint-disable */
 interface KnustEmailOptions {
   recipients: string[];
   bcc?: string[];

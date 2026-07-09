@@ -2,11 +2,13 @@ import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { Calendar, Clock, User, ArrowRight, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import styles from './Landing.module.css';
 import { WorkshopThumbnail } from '@/components/ui/workshop-thumbnail/WorkshopThumbnail';
 import { Badge } from '@/components/ui/badge/Badge';
 import { Countdown } from '@/components/ui/countdown/Countdown';
+import { WorkshopFilterList } from '@/components/ui/workshop-filter/WorkshopFilterList';
+import { HeroWorkshopCarousel } from '@/components/ui/hero-carousel/HeroWorkshopCarousel';
 
 export const revalidate = 60; // Revalidate the page every 60 seconds
 
@@ -17,8 +19,7 @@ export default async function LandingPage() {
     .select('*')
     .eq('status', 'published')
     .order('date', { ascending: true })
-    .order('start_time', { ascending: true })
-    .limit(6);
+    .order('start_time', { ascending: true });
 
   return (
     <div className={styles.page}>
@@ -57,100 +58,19 @@ export default async function LandingPage() {
           <Countdown targetDate="2026-07-16T08:00:00Z" />
         </div>
 
-        <div className={styles.masonryGrid}>
-          <div className={styles.masonryItem1}>
-            <Image 
-              src="/images/landing/robot_ai.png" 
-              alt="AI Concept" 
-              width={400} 
-              height={600} 
-              className={styles.masonryImg}
-            />
-          </div>
-          <div className={styles.masonryItem2}>
-            <Image 
-              src="/images/landing/vr_student.png" 
-              alt="Student in VR" 
-              width={400} 
-              height={300} 
-              className={styles.masonryImg}
-            />
-          </div>
-          <div className={styles.masonryItem3}>
-            <Image 
-              src="/images/landing/student_robot.png" 
-              alt="Student with Robot" 
-              width={400} 
-              height={300} 
-              className={styles.masonryImg}
-            />
-          </div>
-        </div>
+        <HeroWorkshopCarousel workshops={workshops || []} />
       </section>
 
-      {/* Featured Workshops */}
+      {/* Conference Schedule */}
       <section className={styles.workshopsSection}>
         <div className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Featured Workshops</h2>
+          <h2 className={styles.sectionTitle}>Events and Workshops</h2>
           <p className={styles.sectionSubtitle}>
-            Explore our curated selection of hands-on sessions led by industry experts and thought leaders.
+            Explore our hands-on sessions led by industry experts. Select a day below to view the workshops for that specific date.
           </p>
         </div>
 
-        <div className={styles.grid}>
-          {workshops && workshops.map((ws, index) => {
-            const seatsBooked = ws.seats_booked || 0;
-            const isFull = seatsBooked >= ws.capacity;
-            const seatsLeft = ws.capacity - seatsBooked;
-            
-            return (
-              <div 
-                key={ws.id} 
-                className={styles.workshopCard}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <WorkshopThumbnail 
-                  imageUrl={ws.image_url} 
-                  title={ws.title} 
-                  category={ws.category} 
-                  className={styles.workshopImage} 
-                />
-                <div className={styles.workshopContent}>
-                  <div className={styles.workshopCategory}>{(ws.category || 'General').toUpperCase()}</div>
-                  <h3 className={styles.workshopTitle}>{ws.title}</h3>
-                  
-                  <div className={styles.workshopMeta}>
-                    <div className={styles.metaItem}>
-                      <Calendar size={14} />
-                      {new Date(ws.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                    <div className={styles.metaItem}>
-                      <Clock size={14} />
-                      {ws.start_time.slice(0, 5)}
-                    </div>
-                    {ws.facilitator && (
-                      <div className={styles.metaItem}>
-                        <User size={14} />
-                        {ws.facilitator}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className={styles.workshopFooter}>
-                    {isFull ? (
-                      <Badge variant="danger">Full</Badge>
-                    ) : (
-                      <Badge variant="success">{seatsLeft} seats left</Badge>
-                    )}
-                    <Link href="/auth/login" className={styles.bookLink}>
-                      Book Now <ArrowRight size={14} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <WorkshopFilterList initialWorkshops={workshops || []} />
       </section>
 
       {/* Footer */}
