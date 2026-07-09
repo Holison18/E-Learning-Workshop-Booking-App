@@ -62,12 +62,9 @@ export async function POST(request: Request) {
               <p style="margin: 0; font-size: 14px; color: #4A4A4A;">
                 <strong>Date:</strong> ${ws.date}<br>
                 <strong>Time:</strong> ${ws.start_time.slice(0, 5)} - ${ws.end_time.slice(0, 5)}<br>
-                <strong>Venue:</strong> ${ws.location || 'TBA'}<br>
-<<<<<<< HEAD
+                <strong>Location:</strong> ${ws.location || 'TBA'}<br>
+                <strong>Audience:</strong> ${ws.audience || 'TBA'}<br>
                 <strong>Facilitator:</strong> ${ws.facilitator || 'TBA'}
-=======
-                <strong>Audience:</strong> ${ws.audience || 'TBA'}
->>>>>>> 95479d4e332219172bd86bdbfc18a91e07c9c343
               </p>
             </div>
           `).join('')}

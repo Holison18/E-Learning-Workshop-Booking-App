@@ -21,7 +21,17 @@ export function buildEventDescription(opts: {
   const parts: string[] = [];
   if (opts.category) parts.push(`Category: ${opts.category}`);
   if (opts.audience) parts.push(`Audience: ${opts.audience}`);
-  if (opts.description) parts.push(opts.description);
+  
+  if (opts.description) {
+    // Strip HTML tags and decode common entities for calendar display
+    const plainTextDescription = opts.description
+      .replace(/<[^>]*>?/gm, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/\s\s+/g, ' ')
+      .trim();
+    parts.push(plainTextDescription);
+  }
+  
   parts.push('Booked via the KNUST E-Learning Centre Workshop Portal.');
   return parts.join('\n\n');
 }
