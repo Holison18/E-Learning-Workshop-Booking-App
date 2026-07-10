@@ -106,9 +106,8 @@ export function Footer() {
             <li className={styles.contactItem}>
               <Phone size={20} className={styles.contactIcon} />
               <div className={styles.contactPhones}>
-                <span>+233 507177117</span>
-                <span>+233 507176286</span>
-                <span>+233 507177441</span>
+                <span>0506978182</span>
+                <span>0240161450</span>
               </div>
             </li>
             <li className={styles.contactItem}>
