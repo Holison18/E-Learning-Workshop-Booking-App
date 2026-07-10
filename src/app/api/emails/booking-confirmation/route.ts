@@ -47,6 +47,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Workshops not found' }, { status: 404 });
     }
 
+    const reqUrl = new URL(request.url);
+    const baseUrl = `${reqUrl.protocol}//${reqUrl.host}`;
+    const calendarLink = `${baseUrl}/api/calendar/download?ids=${workshopIds.join(',')}`;
+
     // Build the HTML email
     const htmlBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1A1A1A;">
@@ -70,7 +74,10 @@ export async function POST(request: Request) {
           `).join('')}
           
           <p style="margin-top: 24px;">
-            We've attached a calendar file (.ics) to this email. You can open it to add these sessions to your personal calendar.
+            <a href="${calendarLink}" style="display: inline-block; padding: 10px 20px; background-color: #A32020; color: #FFFFFF; text-decoration: none; border-radius: 4px; font-weight: bold;">Add to Calendar (.ics)</a>
+          </p>
+          <p style="margin-top: 16px; font-size: 14px;">
+            Click the button above to download the calendar file and add these sessions to your personal calendar.
           </p>
           <p>See you there!</p>
           <p style="font-size: 12px; color: #888888; margin-top: 32px;">
@@ -80,33 +87,10 @@ export async function POST(request: Request) {
       </div>
     `;
 
-    // Generate ICS Calendar File
-    const calendarEvents = workshops.map(ws => ({
-      uid: ws.id,
-      title: ws.title,
-      description: buildEventDescription({
-        description: ws.description,
-        audience: ws.audience,
-        category: ws.category
-      }),
-      location: ws.location,
-      date: ws.date,
-      startTime: ws.start_time,
-      endTime: ws.end_time
-    }));
-    
-    const icsContent = buildIcsCalendar(calendarEvents);
-    const base64Ics = Buffer.from(icsContent).toString('base64');
-
     const result = await sendKnustEmail({
       recipients: [participant.email],
       subject: 'Workshop Booking Confirmation',
-      htmlBody,
-      attachments: [{
-        fileName: 'knust-workshops.ics',
-        contentType: 'text/calendar',
-        bytes: base64Ics
-      }]
+      htmlBody
     });
 
     if (!result.success) {
