@@ -56,57 +56,39 @@ export default function RegisterPage() {
 
     const fullPhone = `${countryCode}${phoneNumber}`;
 
-    // 1. Sign up the user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: formData.email,
-      password: formData.password,
-      options: {
-        data: {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          phone: fullPhone,
+    // Make API call to our custom backend route
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      },
-    });
-
-    if (authError) {
-      // Check for rate limit error specifically
-      if (authError.message.toLowerCase().includes('rate limit')) {
-        setError('We are receiving too many signup requests right now. Please try again in an hour, or contact support.');
-      } else {
-        setError(authError.message);
-      }
-      setLoading(false);
-      return;
-    }
-
-    if (authData.user) {
-      // 2. Create the participant profile
-      const { error: profileError } = await supabase.from('participants').insert([
-        {
-          id: authData.user.id,
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+        body: JSON.stringify({
           email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          organization: formData.organization,
           phone: fullPhone,
-          organization_name: formData.organization || null,
-        }
-      ]);
+        }),
+      });
 
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        setError('Your account was created, but we could not set up your profile. Please contact support before booking workshops.');
+      const data = await response.json();
+
+      if (!response.ok) {
+        // If there's an error from the backend, show it
+        setError(data.error || 'Failed to create account. Please try again.');
         setLoading(false);
         return;
       }
 
-      if (authData.session) {
-        router.push('/dashboard');
-        router.refresh();
-      } else {
-        // Email confirmation is required before a session is created
-        router.push(`/auth/confirm-email?email=${encodeURIComponent(formData.email)}`);
-      }
+      // Success! Registration complete and KNUST email sent.
+      // Redirect to confirmation page.
+      router.push(`/auth/confirm-email?email=${encodeURIComponent(formData.email)}`);
+    } catch (err: any) {
+      console.error('Registration error:', err);
+      setError('An unexpected error occurred. Please try again.');
+      setLoading(false);
     }
   };
 
