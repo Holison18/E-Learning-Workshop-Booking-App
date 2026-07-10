@@ -50,7 +50,7 @@ export default function SchedulePage() {
       const { data } = await supabase
         .from('bookings')
         .select('id, checked_in, workshops (title, description, date, start_time, end_time, location, audience, category)')
-        .eq('user_id', user.id);
+        .eq('participant_id', user.id);
 
       setEntries((data as unknown as ScheduleEntry[]) || []);
       setLoading(false);
