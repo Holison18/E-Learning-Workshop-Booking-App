@@ -18,14 +18,24 @@ function ConfirmEmailContent() {
     if (!email) return;
     setStatus('sending');
 
-    const { error } =
-      context === 'reset'
-        ? await supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: `${window.location.origin}/auth/reset-password`,
-          })
-        : await supabase.auth.resend({ type: 'signup', email });
-
-    setStatus(error ? 'error' : 'sent');
+    const endpoint = context === 'reset' ? '/api/auth/reset-password' : '/api/auth/resend';
+    
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      
+      if (!response.ok) {
+        setStatus('error');
+      } else {
+        setStatus('sent');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
+    }
   };
 
   return (

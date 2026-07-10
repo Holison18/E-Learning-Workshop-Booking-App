@@ -120,3 +120,105 @@ export function getConfirmationEmailTemplate(confirmationUrl: string, token: str
 </html>
   `;
 }
+
+export function getPasswordResetEmailTemplate(resetUrl: string) {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset your password</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 0;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .header {
+            background-color: #7f1d1d;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+            color: #333333;
+        }
+        .content h2 {
+            margin-top: 0;
+            color: #1f2937;
+            font-size: 20px;
+        }
+        .content p {
+            font-size: 16px;
+            color: #4b5563;
+            margin-bottom: 24px;
+        }
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .button {
+            display: inline-block;
+            background-color: #7f1d1d;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            border-top: 1px solid #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>KNUST E-Learning Portal</h1>
+        </div>
+        
+        <div class="content">
+            <h2>Password Reset Request</h2>
+            <p>We received a request to reset the password for your KNUST E-Learning Workshop Portal account.</p>
+            <p>Click the button below to choose a new password.</p>
+            
+            <div class="button-container">
+                <a href="${resetUrl}" class="button">Reset Password</a>
+            </div>
+            
+            <p style="margin-top: 30px; font-size: 14px;">
+                If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; KNUST E-Learning Centre. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
+  `;
+}
