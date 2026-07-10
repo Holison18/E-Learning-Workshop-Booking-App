@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge/Badge';
 import { Countdown } from '@/components/ui/countdown/Countdown';
 import { WorkshopFilterList } from '@/components/ui/workshop-filter/WorkshopFilterList';
 import { HeroWorkshopCarousel } from '@/components/ui/hero-carousel/HeroWorkshopCarousel';
+import { Footer } from '@/components/layout/Footer';
 
 export const revalidate = 60; // Revalidate the page every 60 seconds
 
@@ -74,21 +75,7 @@ export default async function LandingPage() {
         <WorkshopFilterList initialWorkshops={workshops || []} />
       </section>
 
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <Image 
-            src="/images/logo/kec-mark-white.png" 
-            alt="KNUST Logo" 
-            width={120} 
-            height={60} 
-            className={styles.footerLogo}
-          />
-          <div className={styles.footerCopyright}>
-            &copy; {new Date().getFullYear()} Kwame Nkrumah University of Science and Technology (KNUST) E-Learning Centre. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

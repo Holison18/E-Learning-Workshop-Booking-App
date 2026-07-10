@@ -70,7 +70,12 @@ export default function RegisterPage() {
     });
 
     if (authError) {
-      setError(authError.message);
+      // Check for rate limit error specifically
+      if (authError.message.toLowerCase().includes('rate limit')) {
+        setError('We are receiving too many signup requests right now. Please try again in an hour, or contact support.');
+      } else {
+        setError(authError.message);
+      }
       setLoading(false);
       return;
     }

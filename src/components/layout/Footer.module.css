@@ -1,0 +1,154 @@
+.footer {
+  background-color: #111111;
+  color: #f3f4f6;
+  padding: 4rem 2rem 2rem;
+  font-family: inherit;
+}
+
+.footerContainer {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+}
+
+@media (min-width: 768px) {
+  .footerContainer {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .footerContainer {
+    grid-template-columns: 2fr 1fr 1.5fr;
+  }
+}
+
+.brandSection {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.brandSection p {
+  color: #9ca3af;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  margin: 0;
+  max-width: 400px;
+}
+
+.footerLogo {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0 0 1.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sectionTitle::after {
+  content: '';
+  height: 2px;
+  width: 30px;
+  background-color: var(--primary-red, #cc0000);
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.linksList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.linksList a {
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-size: 0.95rem;
+}
+
+.linksList a:hover {
+  color: #ffffff;
+}
+
+.contactList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.contactItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  color: #9ca3af;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.contactIcon {
+  color: #ffffff;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.contactPhones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.socialRow {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.socialIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.socialIcon:hover {
+  background-color: var(--primary-red, #cc0000);
+  border-color: var(--primary-red, #cc0000);
+}
+
+.footerBottom {
+  max-width: 1200px;
+  margin: 4rem auto 0;
+  padding-top: 2rem;
+  border-top: 1px solid #374151;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.footerBottom p {
+  margin: 0 0 0.5rem 0;
+}

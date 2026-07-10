@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import DOMPurify from 'isomorphic-dompurify';
 import styles from './WorkshopDetails.module.css';
+import { Footer } from '@/components/layout/Footer';
 
 // Revalidate occasionally, but since it's an event page, we can cache it.
 export const revalidate = 60;
@@ -180,21 +181,7 @@ export default async function WorkshopDetailsPage({ params }: { params: Promise<
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className={styles.footer}>
-        <div className={styles.footerContent}>
-          <Image 
-            src="/images/logo/kec-mark-white.png" 
-            alt="KNUST Logo" 
-            width={120} 
-            height={60} 
-            className={styles.footerLogo}
-          />
-          <div className={styles.footerCopyright}>
-            &copy; {new Date().getFullYear()} Kwame Nkrumah University of Science and Technology (KNUST) E-Learning Centre. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
