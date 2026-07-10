@@ -13,8 +13,9 @@ export async function POST(request: Request) {
     }
 
     // 1. Generate the confirmation link via Supabase Admin (without triggering their email)
+    // We use 'magiclink' because 'signup' requires a password, and magiclink will confirm their email and log them in.
     const { data: linkData, error: authError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'signup',
+      type: 'magiclink',
       email,
     });
 
