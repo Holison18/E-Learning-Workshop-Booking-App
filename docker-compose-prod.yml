@@ -37,11 +37,11 @@ services:
         window: 120s
       resources:
         limits:
+          memory: 1024M
+          cpus: "1.00"
+        reservations:
           memory: 512M
           cpus: "0.50"
-        reservations:
-          memory: 256M
-          cpus: "0.25"
       placement:
         constraints:
           - node.role == worker
